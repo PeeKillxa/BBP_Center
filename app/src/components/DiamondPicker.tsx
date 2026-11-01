@@ -16,7 +16,7 @@ export function DiamondPicker({ cfg, mode, setMode, raw, setRaw }: { cfg: Diamon
     const base = v.ok ? v.value : cfg.custom.min
     setRaw(String(Math.min(cfg.custom.max, Math.max(cfg.custom.min, base + d * cfg.custom.step))))
   }
-  const quick = [10_000, 40_000, 60_000, 80_000, 110_000].filter((x) => x >= cfg.custom.min && x <= cfg.custom.max)
+  const quick = [10_000, 40_000, 60_000, 150_000, 200_000].filter((x) => x >= cfg.custom.min && x <= cfg.custom.max)
 
   return (
     <div>

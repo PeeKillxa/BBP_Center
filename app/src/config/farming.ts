@@ -22,7 +22,7 @@ export interface DiamondPricingConfig {
   custom: {
     min: number
     step: number
-    /** Highest orderable amount. Markdown.md defines no cap; the last price anchor is used because no extrapolation rule exists. */
+    /** Highest orderable amount. Must not exceed the last price anchor: no extrapolation rule exists. */
     max: number
     maxIsConfirmed: false
   }
@@ -66,9 +66,12 @@ export const FARM_SERVICES: FarmServiceConfig[] = [
         { diamonds: 50_000, priceBaht: 100 },
         { diamonds: 100_000, priceBaht: 160 },
         { diamonds: 120_000, priceBaht: 180 },
+        // Owner set the 250k cap in chat (2026-11-01) and let us choose the price:
+        // 1 THB per 1,000 diamonds, continuing the 100k–120k rate. Prototype offer only.
+        { diamonds: 250_000, priceBaht: 310 },
       ],
-      packages: [10_000, 20_000, 30_000, 50_000, 100_000, 120_000],
-      custom: { min: 10_000, step: 10_000, max: 120_000, maxIsConfirmed: false },
+      packages: [10_000, 20_000, 50_000, 100_000, 250_000],
+      custom: { min: 10_000, step: 10_000, max: 250_000, maxIsConfirmed: false },
       rate: { diamondsPerRound: 18, secondsPerRound: 120 },
       pricesConfirmedByOwner: false,
     },

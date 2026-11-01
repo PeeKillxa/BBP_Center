@@ -95,8 +95,8 @@ export function Home() {
           <h2 id="h-farm" className="text-2xl font-bold">บริการฟาร์มยอดนิยม</h2>
           <SampleTag>ราคาเสนอสำหรับต้นแบบ · รอร้านยืนยัน</SampleTag>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[10_000, 20_000, 50_000, 100_000].map((d) => {
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {diamond.diamond!.packages.map((d) => {
             const p = priceForDiamonds(d, diamond.diamond!)
             return (
               <Card key={d} lift>
