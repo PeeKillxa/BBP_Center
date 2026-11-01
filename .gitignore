@@ -3,3 +3,6 @@ dist/
 *.local
 .playwright-cli/
 .superpowers/
+.claude/
+skills-lock.json
+*.tsbuildinfo
