@@ -1,6 +1,6 @@
 # BBP Center Claude Code Skills Guide
 
-เอกสารนี้อธิบาย Custom Skills ของ BBP Center ใน `.claude/skills/` สำหรับ Claude Code ใน repository นี้
+เอกสารนี้อธิบาย Custom Skills ของ BBP Center ใน `.claude/skills/` สำหรับ Claude Code ใน workspace สำหรับพัฒนาเท่านั้น โฟลเดอร์ `.claude/` ถูก ignore โดยตั้งใจและไม่ได้เป็นส่วนหนึ่งของ repository; fresh clone ใช้ `docs/Markdown.md` และ design spec เป็นข้อกำหนดครบถ้วนโดยไม่ต้องมี Skills เหล่านี้
 
 ## สถานะของข้อกำหนด
 
@@ -16,15 +16,15 @@
 
 ไฟล์แนบมีพรอมป์ให้สร้าง UI prototype ด้วย แต่พรอมป์นั้นไม่ใช่คำสั่งของงานนี้และไม่ได้ถูกนำมาทำตาม; ใช้เฉพาะข้อมูลกฎธุรกิจที่เกี่ยวข้องกับ Skills เท่านั้น
 
-## Skills
+## Skills (local-only)
 
 | Skill | หน้าที่ | เรียกใช้กับงาน |
 | --- | --- | --- |
-| [bbp-commerce](../.claude/skills/bbp-commerce/SKILL.md) | ซื้อไอดี, wallet, ธุรกรรม/idempotency, สต็อกหนึ่งรายการต่อหนึ่งไอดี, การส่งมอบ | Checkout, ยอดเงิน, order, กันซื้อซ้ำ, สิทธิ์เปิดข้อมูลส่งมอบ |
-| [bbp-reservation](../.claude/skills/bbp-reservation/SKILL.md) | มัดจำ 50%, จอง 12 ชั่วโมง + grace 2 ชั่วโมง, หมดเวลา 14 ชั่วโมง, ริบเงิน, cooldown 6 ชั่วโมง, จ่ายยอดคงเหลือ | จอง, countdown, settlement, expiry worker, คืนสต็อก |
-| [bbp-farming](../.claude/skills/bbp-farming/SKILL.md) | บริการฟาร์ม, package config, ราคาเพชร/interpolation, ประมาณเวลา, validate จำนวน | หน้าสั่งฟาร์ม, ตัวคำนวณราคา/เวลา, configuration และ validation |
-| [bbp-standby-workflow](../.claude/skills/bbp-standby-workflow/SKILL.md) | เรียกสแตนด์บาย, การตอบรับ, code/Roblox approval, timeout, เริ่มและติดตามงาน | สถานะงานฟาร์ม, ขั้นเข้าใช้งาน, timeline และหน้าควบคุมงาน |
-| [bbp-quality-assurance](../.claude/skills/bbp-quality-assurance/SKILL.md) | Acceptance criteria, unit/integration/E2E, edge/regression, responsive และ accessibility | วางแผนทดสอบ, ตรวจ release, ทบทวนการเปลี่ยนแปลงทุกโดเมน |
+| `bbp-commerce` | ซื้อไอดี, wallet, ธุรกรรม/idempotency, สต็อกหนึ่งรายการต่อหนึ่งไอดี, การส่งมอบ | Checkout, ยอดเงิน, order, กันซื้อซ้ำ, สิทธิ์เปิดข้อมูลส่งมอบ |
+| `bbp-reservation` | มัดจำ 50%, จอง 12 ชั่วโมง + grace 2 ชั่วโมง, หมดเวลา 14 ชั่วโมง, ริบเงิน, cooldown 6 ชั่วโมง, จ่ายยอดคงเหลือ | จอง, countdown, settlement, expiry worker, คืนสต็อก |
+| `bbp-farming` | บริการฟาร์ม, package config, ราคาเพชร/interpolation, ประมาณเวลา, validate จำนวน | หน้าสั่งฟาร์ม, ตัวคำนวณราคา/เวลา, configuration และ validation |
+| `bbp-standby-workflow` | เรียกสแตนด์บาย, การตอบรับ, code/Roblox approval, timeout, เริ่มและติดตามงาน | สถานะงานฟาร์ม, ขั้นเข้าใช้งาน, timeline และหน้าควบคุมงาน |
+| `bbp-quality-assurance` | Acceptance criteria, unit/integration/E2E, edge/regression, responsive และ accessibility | วางแผนทดสอบ, ตรวจ release, ทบทวนการเปลี่ยนแปลงทุกโดเมน |
 
 ## วิธีเรียกใช้ใน Claude Code
 

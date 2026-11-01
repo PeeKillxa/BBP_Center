@@ -15,7 +15,7 @@
 
 1. คำสั่งล่าสุดของเจ้าของในแชต (เพดาน 250k ฯลฯ ดูหัวข้อ 9)
 2. `docs/Markdown.md`
-3. Skills ใน `.claude/skills/bbp-*`
+3. Skills local-only ใน `.claude/skills/bbp-*` (ถ้ามีใน workspace; ไม่ใช่ dependency ของ fresh clone)
 4. `E:\Downloads\Prompt_.txt` ใช้เฉพาะส่วนที่ไม่ขัดกับข้างบน
 
 ค่าใน Prompt_.txt ที่ถูกแทนแล้ว: 20k=38, 30k=54, 50k=85, 15k=29, 40k=69.50, ขั้นทีละ 1,000 เพชร และกฎ 1.60 บาทต่อ 1,000 เพชรเกิน 100k
