@@ -1,0 +1,128 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/noto-sans-thai';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Dark base from the brief (#070B18 / #101A30 / #2563EB / #22D3EE / #F5F9FF),
+ * adjusted for contrast: body text on surfaces ≥ 7:1, muted text ≥ 4.5:1, primary button text ≥ 4.5:1.
+ */
+:root {
+  --bg: #f3f8ff;
+  --surface: #ffffff;
+  --surface-2: #e8f0fc;
+  --border: #cbd8ee;
+  --text: #0b1a3a;
+  --muted: #44557a;
+  --primary: #1d4ed8; /* white text 6.7:1 */
+  --primary-hover: #1e40af;
+  --accent: #0e7490; /* cyan for text on light bg 5.4:1 */
+  --accent-soft: #cff4fc;
+  --success: #15803d;
+  --warning: #a16207;
+  --danger: #b91c1c;
+  --ring: #2563eb;
+  --glow: rgb(34 211 238 / 0.35);
+}
+.dark {
+  --bg: #070b18;
+  --surface: #101a30;
+  --surface-2: #17243f;
+  --border: #263a60;
+  --text: #f5f9ff;
+  --muted: #a9b8d6;
+  --primary: #2563eb; /* white text 5.2:1 */
+  --primary-hover: #1d4ed8;
+  --accent: #22d3ee;
+  --accent-soft: #0c3044;
+  --success: #4ade80;
+  --warning: #facc15;
+  --danger: #f87171;
+  --ring: #22d3ee;
+  --glow: rgb(34 211 238 / 0.45);
+}
+
+@theme inline {
+  --font-sans: 'Noto Sans Thai Variable', 'Noto Sans Thai', system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Card hover lift + edge light. Pointer devices only; content works without it. */
+@media (hover: hover) and (pointer: fine) {
+  .card-lift {
+    transition:
+      transform 180ms var(--ease-out-soft),
+      box-shadow 180ms var(--ease-out-soft),
+      border-color 180ms var(--ease-out-soft);
+  }
+  .card-lift:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 30px -12px var(--glow);
+  }
+}
+
+.hero-gradient {
+  background:
+    radial-gradient(60% 80% at 15% 20%, rgb(37 99 235 / 0.35), transparent 60%),
+    radial-gradient(50% 70% at 85% 30%, rgb(34 211 238 / 0.28), transparent 60%),
+    radial-gradient(70% 60% at 50% 110%, rgb(99 102 241 / 0.25), transparent 60%);
+  background-size: 160% 160%;
+  animation: hero-drift 18s ease-in-out infinite alternate;
+}
+@keyframes hero-drift {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 100%; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

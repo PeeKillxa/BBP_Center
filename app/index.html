@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/brand/bbp-center-logo.png" />
+    <title>BBP Center — ต้นแบบร้าน (โหมดสาธิต)</title>
+    <script>
+      // Apply saved theme before paint to avoid a flash. Only the theme choice is read here.
+      ;(function () {
+        try {
+          var t = localStorage.getItem('bbp-theme') || 'system'
+          var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
