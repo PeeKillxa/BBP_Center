@@ -4,6 +4,7 @@
  */
 import { useSyncExternalStore } from 'react'
 import { run, sweep, type Cmd } from '../domain/engine'
+import { parseStoredState } from '../domain/stateShape'
 import type { CommandResult, DemoState } from '../domain/types'
 import { createSeed, DEMO_STATE_VERSION } from '../mock/seed'
 
@@ -12,14 +13,12 @@ const listeners = new Set<() => void>()
 
 const load = (): DemoState => {
   try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as DemoState
-      if (parsed.version === DEMO_STATE_VERSION) return parsed
-    }
+    const parsed = parseStoredState(localStorage.getItem(KEY), DEMO_STATE_VERSION)
+    if (parsed) return parsed
   } catch {
-    /* corrupted demo data → reseed */
+    /* storage disabled → reseed */
   }
+  /* missing, corrupted, old-version or wrong-shaped demo data → reseed */
   return createSeed(Date.now())
 }
 
