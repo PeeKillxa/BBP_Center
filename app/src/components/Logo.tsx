@@ -1,8 +1,9 @@
 import { cn } from '../lib/util'
 
 /**
- * Shop logo from public/brand/bbp-center-logo.png (copied unchanged from the owner's file).
- * Square 1254×1254 source; rendered square with object-contain so proportions never change.
+ * Shop logo from public/brand/bbp-center-logo.png, copied unchanged from the owner's file
+ * "โลโก้เกมเมอร์ BBP Center นีออนสีน้ำเงิน - Edited.png" (1254×1254 RGBA, circular, transparent corners).
+ * Rendered square with object-contain so proportions never change.
  */
 export function Logo({ size = 40, withText = true, className }: { size?: number; withText?: boolean; className?: string }) {
   return (
