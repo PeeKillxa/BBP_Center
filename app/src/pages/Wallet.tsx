@@ -10,6 +10,7 @@ import type { TopUpMethod } from '../domain/types'
 import { formatTHB, parseBahtInput } from '../lib/money'
 import { formatDateTime } from '../lib/time'
 import { cn, fingerprint, uid } from '../lib/util'
+import { safeNext } from '../lib/navigation'
 import { dispatch, useCurrentUser, useDemo } from '../store/store'
 
 const MIN_TOPUP = 100 // satang; demo validation only
@@ -138,7 +139,7 @@ function TopUpForm({ method }: { method: TopUpMethod }) {
 
 function NextLink({ href }: { href: string }) {
   const nav = useNavigate()
-  const safe = href.startsWith('/') && !href.startsWith('//') ? href : '/'
+  const safe = safeNext(href, '/')
   return <Button onClick={() => nav(safe)} icon={<ArrowRight className="size-4" aria-hidden />}>กลับไปทำรายการต่อ</Button>
 }
 
@@ -149,6 +150,7 @@ export function WalletPage() {
   return (
     <RequireAuth reason="เข้าสู่ระบบเพื่อเติมเงิน">
       <PageHeader title="กระเป๋าเงินและเติมเงิน" />
+      <p className="mb-4 text-sm"><Link className="text-accent underline" to="/wallet/live">เปิดกระเป๋าเงินจริง / รับซอง TrueMoney</Link></p>
       {user && (
         <div className="grid gap-6 lg:grid-cols-[1fr_1.3fr]">
           <div className="space-y-4">

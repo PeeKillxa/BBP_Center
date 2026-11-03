@@ -19,12 +19,13 @@ export interface DiamondRateConfig {
 export interface DiamondPricingConfig {
   anchors: PriceAnchor[] // ascending by diamonds
   packages: number[] // diamond amounts shown as package cards
+  quickPicks: number[]
   custom: {
     min: number
     step: number
     /** Highest orderable amount. Must not exceed the last price anchor: no extrapolation rule exists. */
     max: number
-    maxIsConfirmed: false
+    maxIsConfirmed: boolean
   }
   rate: DiamondRateConfig
   pricesConfirmedByOwner: boolean
@@ -71,7 +72,8 @@ export const FARM_SERVICES: FarmServiceConfig[] = [
         { diamonds: 250_000, priceBaht: 310 },
       ],
       packages: [10_000, 20_000, 50_000, 100_000, 250_000],
-      custom: { min: 10_000, step: 10_000, max: 250_000, maxIsConfirmed: false },
+      quickPicks: [10_000, 40_000, 60_000, 150_000, 200_000],
+      custom: { min: 10_000, step: 10_000, max: 250_000, maxIsConfirmed: true },
       rate: { diamondsPerRound: 18, secondsPerRound: 120 },
       pricesConfirmedByOwner: false,
     },

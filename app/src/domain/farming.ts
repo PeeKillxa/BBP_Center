@@ -13,7 +13,7 @@ export const QUANTITY_ERROR_TEXT = (e: QuantityError): string => {
   const n = (v: number) => v.toLocaleString('th-TH')
   switch (e.code) {
     case 'not-a-number':
-      return 'กรุณากรอกจำนวนเพชรเป็นตัวเลข'
+      return 'กรุณาใช้เลขอารบิก 0–9 สำหรับจำนวนเพชร'
     case 'not-integer':
       return 'จำนวนเพชรต้องเป็นจำนวนเต็ม'
     case 'negative':
@@ -21,7 +21,7 @@ export const QUANTITY_ERROR_TEXT = (e: QuantityError): string => {
     case 'below-min':
       return `ขั้นต่ำ ${n(e.min)} เพชร`
     case 'above-max':
-      return `สูงสุด ${n(e.max)} เพชรต่อออเดอร์ (เพดานจริงรอร้านกำหนด)`
+      return `สูงสุด ${n(e.max)} เพชรต่อออเดอร์`
     case 'off-step':
       return `ต้องเพิ่มทีละ ${n(e.step)} เพชร เช่น ${n(e.lower)} หรือ ${n(e.upper)}`
   }
@@ -44,6 +44,18 @@ export const validateDiamondQuantity = (
     return { ok: false, error: { code: 'off-step', step: cfg.step, lower, upper: lower + cfg.step } }
   }
   return { ok: true, value: v }
+}
+
+/** Move to the next valid step; repair out-of-range values at the nearest boundary. */
+export function stepDiamondQuantity(raw: string, direction: -1 | 1, cfg: DiamondPricingConfig['custom']): number {
+  const text = raw.replace(/,/g, '').trim()
+  if (!/^-?\d+(\.\d+)?$/.test(text) || !Number.isFinite(Number(text))) return cfg.min
+  const value = Number(text)
+  if (value < cfg.min) return cfg.min
+  if (value > cfg.max) return cfg.max
+  const position = (value - cfg.min) / cfg.step
+  const next = direction < 0 ? Math.ceil(position) - 1 : Math.floor(position) + 1
+  return Math.min(cfg.max, Math.max(cfg.min, cfg.min + next * cfg.step))
 }
 
 export type PriceResult =

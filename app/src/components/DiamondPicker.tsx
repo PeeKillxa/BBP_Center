@@ -1,7 +1,7 @@
 import { Gem, Minus, Plus } from 'lucide-react'
 import { useId } from 'react'
 import type { DiamondPricingConfig } from '../config/farming'
-import { priceForDiamonds, QUANTITY_ERROR_TEXT, validateDiamondQuantity } from '../domain/farming'
+import { priceForDiamonds, QUANTITY_ERROR_TEXT, stepDiamondQuantity, validateDiamondQuantity } from '../domain/farming'
 import { formatTHB } from '../lib/money'
 import { cn } from '../lib/util'
 
@@ -12,11 +12,8 @@ export function DiamondPicker({ cfg, mode, setMode, raw, setRaw }: { cfg: Diamon
   const id = useId()
   const v = validateDiamondQuantity(raw, cfg.custom)
   const n = (x: number) => x.toLocaleString('th-TH')
-  const step = (d: number) => {
-    const base = v.ok ? v.value : cfg.custom.min
-    setRaw(String(Math.min(cfg.custom.max, Math.max(cfg.custom.min, base + d * cfg.custom.step))))
-  }
-  const quick = [10_000, 40_000, 60_000, 150_000, 200_000].filter((x) => x >= cfg.custom.min && x <= cfg.custom.max)
+  const step = (direction: -1 | 1) => setRaw(String(stepDiamondQuantity(raw, direction, cfg.custom)))
+  const quick = cfg.quickPicks.filter((x) => validateDiamondQuantity(x, cfg.custom).ok)
 
   return (
     <div>
@@ -51,7 +48,7 @@ export function DiamondPicker({ cfg, mode, setMode, raw, setRaw }: { cfg: Diamon
               <button type="button" onClick={() => step(1)} className="grid w-12 place-items-center rounded-xl border border-line bg-surface-2 disabled:opacity-50" aria-label={`เพิ่ม ${n(cfg.custom.step)} เพชร`} disabled={v.ok && v.value >= cfg.custom.max}><Plus className="size-4" aria-hidden /></button>
             </div>
             <p id={`${id}-qty-msg`} role={v.ok ? undefined : 'alert'} className={cn('text-sm', v.ok ? 'text-muted' : 'text-danger')}>
-              {v.ok ? `ขั้นต่ำ ${n(cfg.custom.min)} · เพิ่มทีละ ${n(cfg.custom.step)} · สูงสุด ${n(cfg.custom.max)} เพชร (เพดานจริงรอร้านกำหนด)` : QUANTITY_ERROR_TEXT(v.error)}
+              {v.ok ? `ขั้นต่ำ ${n(cfg.custom.min)} · เพิ่มทีละ ${n(cfg.custom.step)} · สูงสุด ${n(cfg.custom.max)} เพชร` : QUANTITY_ERROR_TEXT(v.error)}
             </p>
             <div className="flex flex-wrap gap-2" aria-label="ตัวเลือกด่วน">
               {quick.map((d) => (

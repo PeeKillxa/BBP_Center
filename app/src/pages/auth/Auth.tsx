@@ -5,10 +5,10 @@ import { useToast } from '../../components/feedback'
 import { Logo } from '../../components/Logo'
 import { Button, Card, Field, Notice } from '../../components/ui'
 import { uid } from '../../lib/util'
+import { safeNext } from '../../lib/navigation'
 import { getState, nowMs, setState } from '../../store/store'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-const safeNext = (n: string | null) => (n && n.startsWith('/') && !n.startsWith('//') && !n.startsWith('/login') ? n : '/account')
 
 function Shell({ title, children, footer }: { title: string; children: ReactNode; footer: ReactNode }) {
   return (

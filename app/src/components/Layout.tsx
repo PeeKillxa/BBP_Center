@@ -94,7 +94,7 @@ export function Layout() {
       <a href="#main" className="sr-only z-[80] rounded-lg bg-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2">ข้ามไปยังเนื้อหา</a>
       <div className="flex items-center justify-center gap-2 bg-warning/15 px-4 py-1.5 text-center text-xs font-medium text-warning">
         <FlaskConical className="size-3.5 shrink-0" aria-hidden />
-        <span>ต้นแบบโหมดสาธิต · ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ไม่มีการตัดเงินจริง ห้ามโอนเงินหรือกรอกบัญชีจริง</span>
+        <span>{loc.pathname === '/wallet/live' ? 'กระเป๋าเงินจริง · ใช้บัญชีแยกจากเดโม · สินค้าและบริการส่วนอื่นยังเป็นต้นแบบ' : 'ต้นแบบโหมดสาธิต · ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ไม่มีการตัดเงินจริง ห้ามโอนเงินหรือกรอกบัญชีจริง'}</span>
       </div>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
@@ -111,7 +111,7 @@ export function Layout() {
           <SearchBox className="mx-auto hidden w-full max-w-sm md:block" />
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitch />
-            <AccountArea />
+            {loc.pathname === '/wallet/live' ? <Link to="/wallet" className="text-sm text-accent underline">กลับเดโม</Link> : <AccountArea />}
           </div>
         </div>
         <div className="px-4 pb-2 md:hidden">
@@ -145,7 +145,7 @@ export function Layout() {
           ))}
         </ul>
       </nav>
-      <DemoControls />
+      {loc.pathname !== '/wallet/live' && <DemoControls />}
     </MotionConfig>
   )
 }

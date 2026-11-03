@@ -1,5 +1,7 @@
 # BBP Center Prototype — Finish Implementation Plan
 
+สถานะอัปเดต 2026-11-03: Task 0–4 เสร็จแล้วตามประวัติ Git และรายงาน E2E วันที่ 2026-11-01 ช่อง checkbox ด้านล่างเป็นแผนย้อนหลัง ดูผลเก็บรีวิว/TrueMoney ล่าสุดใน `2026-11-03-finish-results.md`
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** ทำโค้ดใน `app/` ให้ตรง spec: แก้ bug runtime, เพดานฟาร์ม 250k, ทดสอบในเบราว์เซอร์ตามเกณฑ์ผ่าน, เขียน README และ HANDOFF

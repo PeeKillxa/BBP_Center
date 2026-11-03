@@ -1,24 +1,30 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router'
 import { Layout } from './components/Layout'
-import { AccountHome } from './pages/account/AccountHome'
-import { FarmJobDetail, FarmJobs } from './pages/account/FarmJobs'
-import { Notifications } from './pages/account/Notifications'
-import { OrderDetail, Orders } from './pages/account/Orders'
-import { Profile } from './pages/account/Profile'
-import { ReservationDetail, Reservations } from './pages/account/Reservations'
-import { Transactions } from './pages/account/Transactions'
-import { Forgot, Login, Register } from './pages/auth/Auth'
-import { FarmIndex } from './pages/FarmIndex'
-import { FarmService } from './pages/FarmService'
-import { Help } from './pages/Help'
-import { Home } from './pages/Home'
-import { ListingDetail } from './pages/ListingDetail'
-import { MapListings } from './pages/MapListings'
-import { Maps } from './pages/Maps'
-import { NotFound } from './pages/NotFound'
-import { OwnerFarm } from './pages/OwnerFarm'
-import { WalletPage } from './pages/Wallet'
+const AccountHome = lazy(() => import('./pages/account/AccountHome').then(m => ({ default: m.AccountHome })))
+const FarmJobs = lazy(() => import('./pages/account/FarmJobs').then(m => ({ default: m.FarmJobs })))
+const FarmJobDetail = lazy(() => import('./pages/account/FarmJobs').then(m => ({ default: m.FarmJobDetail })))
+const Notifications = lazy(() => import('./pages/account/Notifications').then(m => ({ default: m.Notifications })))
+const Orders = lazy(() => import('./pages/account/Orders').then(m => ({ default: m.Orders })))
+const OrderDetail = lazy(() => import('./pages/account/Orders').then(m => ({ default: m.OrderDetail })))
+const Profile = lazy(() => import('./pages/account/Profile').then(m => ({ default: m.Profile })))
+const Reservations = lazy(() => import('./pages/account/Reservations').then(m => ({ default: m.Reservations })))
+const ReservationDetail = lazy(() => import('./pages/account/Reservations').then(m => ({ default: m.ReservationDetail })))
+const Transactions = lazy(() => import('./pages/account/Transactions').then(m => ({ default: m.Transactions })))
+const Login = lazy(() => import('./pages/auth/Auth').then(m => ({ default: m.Login })))
+const Register = lazy(() => import('./pages/auth/Auth').then(m => ({ default: m.Register })))
+const Forgot = lazy(() => import('./pages/auth/Auth').then(m => ({ default: m.Forgot })))
+const FarmIndex = lazy(() => import('./pages/FarmIndex').then(m => ({ default: m.FarmIndex })))
+const FarmService = lazy(() => import('./pages/FarmService').then(m => ({ default: m.FarmService })))
+const Help = lazy(() => import('./pages/Help').then(m => ({ default: m.Help })))
+const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })))
+const ListingDetail = lazy(() => import('./pages/ListingDetail').then(m => ({ default: m.ListingDetail })))
+const MapListings = lazy(() => import('./pages/MapListings').then(m => ({ default: m.MapListings })))
+const Maps = lazy(() => import('./pages/Maps').then(m => ({ default: m.Maps })))
+const NotFound = lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })))
+const OwnerFarm = lazy(() => import('./pages/OwnerFarm').then(m => ({ default: m.OwnerFarm })))
+const WalletPage = lazy(() => import('./pages/Wallet').then(m => ({ default: m.WalletPage })))
+const LiveWallet = lazy(() => import('./pages/LiveWallet').then(m => ({ default: m.LiveWallet })))
 
 function ScrollTop() {
   const { pathname } = useLocation()
@@ -32,6 +38,7 @@ export function App() {
   return (
     <>
       <ScrollTop />
+      <Suspense fallback={<p role="status" className="p-6 text-center">กำลังโหลดหน้า…</p>}>
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
@@ -44,6 +51,7 @@ export function App() {
           <Route path="register" element={<Register />} />
           <Route path="forgot" element={<Forgot />} />
           <Route path="wallet" element={<WalletPage />} />
+          <Route path="wallet/live" element={<LiveWallet />} />
           <Route path="account" element={<AccountHome />} />
           <Route path="account/orders" element={<Orders />} />
           <Route path="account/orders/:id" element={<OrderDetail />} />
@@ -59,6 +67,7 @@ export function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+      </Suspense>
     </>
   )
 }

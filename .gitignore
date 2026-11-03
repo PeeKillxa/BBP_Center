@@ -6,3 +6,7 @@ dist/
 .claude/
 skills-lock.json
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
+server/data/
