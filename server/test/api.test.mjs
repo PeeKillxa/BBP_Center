@@ -5,6 +5,7 @@ import { createPayments, openDatabase } from '../src/payments.mjs'
 
 test('API authenticates on the server, rejects CSRF and isolates users and balances', async () => {
   const db = openDatabase(':memory:')
+  db.exec("CREATE TABLE shop_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL); INSERT INTO shop_settings VALUES ('contactUrl','https://example.invalid/contact'),('terms','Test terms'),('open','true');")
   const origin = 'http://localhost:5173'
   const receive = createPayments({ db, phone: '0800000000', redeem: async (_phone, code) => ({ code, amount: 50 }) })
   const server = createApi({ db, origin, receive, enabled: true })

@@ -1,45 +1,37 @@
-# BBP Center payment service
+# BBP Center server
 
-Node.js 24+ ใช้ SQLite บนดิสก์และ `@fortune-inc/tw-voucher@1.1.2` ฝั่งเซิร์ฟเวอร์เท่านั้น
+Node.js 24+, SQLite บนดิสก์, session cookie, Google/Discord OAuth, TrueMoney, สินค้า/คำสั่งซื้อ, จอง 50%, บริการฟาร์ม และหลังบ้าน
 
-## เริ่มใช้งาน
+คำแนะนำปัจจุบัน: [docs/LAUNCH.md](../docs/LAUNCH.md)
 
-1. ใน `server/` รัน `npm ci` แล้วคัดลอก `.env.example` เป็น `.env`
-2. ใส่เบอร์ผู้รับใน `TRUEMONEY_RECIPIENT_PHONE` และตั้ง `TRUEMONEY_ENABLED=true` เมื่อพร้อมรับเงินจริง
-3. รัน `npm start` (ฟังเฉพาะ `127.0.0.1:3001`)
-4. เปิดอีก terminal ใน `app/` รัน `npm run dev` แล้วเปิด `http://localhost:5173/wallet/live`
-5. สมัครบัญชีกระเป๋าเงินจริง (แยกจากบัญชีเดโม) แล้วส่งซองผ่านแบบฟอร์ม ยอดอ้างอิงผล redeem จาก provider
+## เริ่มรัน
 
-`.env` และ `data/` ถูก ignore ห้ามใช้ตัวแปร `VITE_*` เก็บเบอร์/secret ไม่ต้องใส่เบอร์ใน frontend ผู้ใช้เป็นผู้ตั้งเบอร์เอง
+`npm ci` แล้วตั้ง `.env` (ไม่อยู่ใน Git) จาก `.env.example` โดยคงค่าที่ตั้งไว้แล้ว รัน `npm start` ที่ `127.0.0.1:3001`
 
-API ส่งรหัสซองกับเบอร์ผู้รับให้ proxy ของแพ็กเกจตาม [ซอร์ส upstream](https://github.com/Fortune-Inc/tw-voucher/blob/master/index.js) การเรียกนี้ใช้ซองและเคลื่อนเงินจริง ไม่ใช่การตรวจแบบ read-only
+Frontend: `cd ../app` → `npm ci` → `npm run build` Node จะเสิร์ฟไฟล์ `app/dist` ด้วย ระหว่างพัฒนาใช้ Vite port 5173 และ `APP_ORIGIN=http://localhost:5173`
 
-## ขอบเขตปัจจุบัน
+## การเงินและสิทธิ์
 
-- บัญชีจริงใช้ scrypt พร้อม salt เฉพาะบัญชี; session token อยู่ใน cookie HttpOnly/SameSite=Strict เก็บเฉพาะ hash ฝั่ง DB อายุ 12 ชั่วโมง
-- `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`, `/api/wallet`, `/api/topups/truemoney`, `/api/health`
-- POST ต้องมี Origin ตรงกับ `APP_ORIGIN` และ JSON; rate limit 20 POST/นาที/IP สำหรับ process เดียว
-- ยอดเงินจริงอยู่ใน SQLite และแยกจาก localStorage ของเดโม ไม่เปลี่ยนเมื่อกด Demo Controls/รีเซ็ตเดโม
-- สินค้า จอง ฟาร์ม และการเติมผ่านสลิปยังเป็นเดโม **ยอดเงินจริงยังใช้ซื้อไม่ได้** จึงไม่ควรชวนลูกค้าเติมก่อนร้านมีขั้นตอนรองรับยอดดังกล่าว
-- รองรับ Google/Discord จริงผ่าน OAuth authorization code + PKCE ฝั่งเซิร์ฟเวอร์ ดู `docs/OAUTH_SETUP.md` เมื่อยังไม่ตั้ง credentials ปุ่มจะปิดพร้อมเหตุผล
-- ยังไม่มีอีเมลยืนยัน/รีเซ็ตรหัสผ่านจริงของบัญชีอีเมล หรือหน้าแอดมินสำหรับเงินจริง
+ใช้ข้อมูลจริงใน SQLite เท่านั้น การซื้อและจองล็อกธุรกรรมพร้อมหัก ledger และเปลี่ยนสต็อก มี idempotency ฝั่ง server ยอดคงเหลือรวม ledger เครดิตเติมเงินเดิมกับ commerce ledger แบบ append-only จึงเก็บยอดเดิมโดยไม่ย้ายหรือลบข้อมูล
 
-## กันรับซ้ำและผลไม่แน่นอน
+รับซองผ่าน `@fortune-inc/tw-voucher@1.1.2` ฝั่ง server ส่งเบอร์/รหัสซองไป proxy ของแพ็กเกจตาม [ซอร์ส upstream](https://github.com/Fortune-Inc/tw-voucher/blob/master/index.js) ไม่เก็บรหัสซองดิบหรือเบอร์ใน response/DB/log
 
-ส่ง `Idempotency-Key` เดิมสำหรับ retry เดิม โค้ดซองและ URL ของซองเดียวกันถูก canonicalize ก่อน hash; unique constraint ล็อกซองข้ามผู้ใช้ก่อนเรียก provider ไม่เก็บรหัสซองดิบ เบอร์ดิบ หรือชื่อเจ้าของซองใน DB/response/log
+ซองถูกล็อกข้ามผู้ใช้ก่อนเรียก provider หากไม่ทราบผลจะรอตรวจสอบและไม่ retry redeem อัตโนมัติ เจ้าของตรวจหลักฐานแล้วบันทึกยอดจริงได้ผ่านหลังบ้าน มี audit log และกันใช้ receipt ซ้ำ
 
-ผลสำเร็จเพิ่ม ledger และเปลี่ยนสถานะใน transaction เดียว ตรวจยอดเป็นจำนวนเต็มสตางค์จาก provider เท่านั้น ไม่รับจำนวนเงินหรือ user id จาก client
+เจ้าของร้านกำหนดด้วย `ADMIN_USER_IDS` ซึ่งเป็นรหัสบัญชีจาก `/account/profile` ไม่มีปุ่มหรือ API สลับสิทธิ์จาก client ข้อมูลส่งมอบเข้ารหัส AES-256-GCM ด้วย `data/delivery.key` และเปิดได้เฉพาะเจ้าของ order พร้อม audit log
 
-Timeout, error จาก provider, response ผิดรูปแบบ หรือ process ล่มระหว่าง redeem จะเป็น `needs-review` และไม่เรียก redeem ซ้ำอัตโนมัติ การตรวจย้อนหลังต้องให้เจ้าของตรวจหลักฐานการรับเงินจริงกับผู้ให้บริการโดยใช้เลขรายการและเวลารายการก่อนปรับยอด ไม่มี API ตรวจย้อนหลังที่สมมติขึ้น และยังไม่มี UI/คำสั่งปรับยอดเอง
+OAuth ใช้ authorization code + PKCE + state ผูก cookie ใช้ครั้งเดียว Google ตรวจ signed ID token ไม่รวมบัญชีอัตโนมัติด้วยอีเมล ให้เจ้าของบัญชีกดเชื่อมเอง Session ปกติ HttpOnly/SameSite=Strict (Secure บน HTTPS) อายุ 12 ชั่วโมง รหัสผ่านบัญชีอีเมลเก็บ scrypt + salt
 
-การส่ง key ใหม่/เปลี่ยนบัญชีไม่ปลดล็อกซองที่กำลังตรวจหรือรอตรวจสอบ ใช้ server process เดียวต่อฐานข้อมูล (ขั้นเริ่ม process เปลี่ยน processing ที่ค้างเป็น needs-review)
+## API
 
-## การทดสอบและ deployment
+- Public: `/api/health`, `/api/catalog`, `/api/farm/quote`, `/api/auth/providers`, `/api/auth/session`, OAuth start/callback, auth login/register
+- Member: `/api/wallet`, `/api/topups/truemoney`, `/api/account`, `/api/purchase`, `/api/reservations`, `/api/reservations/settle`, `/api/farm/orders`, `/api/orders/:id/delivery`, logout/link provider
+- Owner: `/api/admin`, `/api/admin/settings`, `/api/admin/listings`, `/api/admin/listings/archive`, `/api/admin/farm`, `/api/admin/payments/reconcile`
 
-`npm test` ใช้ provider จำลองเท่านั้น ไม่ส่งซองจริง รวม HTTP auth/CSRF, concurrent retry, duplicate cross-user, timeout/late result, malformed amount, restart และ OAuth state/PKCE/ID-token/account linking
+POST ตรวจ Origin ตรง APP_ORIGIN, JSON, body limit, rate limit; browser เปลี่ยนราคา ยอดเงิน หรือ role เองไม่ได้
 
-Production ต้องตั้ง `NODE_ENV=production`, `APP_ORIGIN=https://โดเมนจริง` แล้วตั้ง reverse proxy ให้ `/api/*` ไป loopback port 3001 พร้อมเสิร์ฟ `app/dist` และ SPA fallback อย่าเปิดพอร์ต DB/API แยกสู่ public และอย่า log request body, cookie, voucher หรือ password
+การยกเลิก/คืนเงินที่ยังไม่มีนโยบายไม่ได้ทำอัตโนมัติ ไม่มีระบบตรวจสลิปธนาคารหรือรีเซ็ตรหัสผ่านอีเมลจนกว่าจะมี integration จริง งานฟาร์มประสานผ่านช่องทางที่เจ้าของตั้งค่า ไม่ขอข้อมูลเข้าเกมในแบบฟอร์มเว็บ
 
-สำรอง SQLite ด้วยวิธี SQLite online backup หรือหยุด process ก่อนคัดลอก DB (รวม WAL ตามวิธีสำรองที่เลือก) เก็บสำรองไว้ในพื้นที่จำกัดสิทธิ์ ห้าม commit ข้อมูลจริง การ deploy แบบ ephemeral filesystem จะทำข้อมูลหาย ต้องใช้ persistent disk
+`npm test` ใช้ provider จำลอง/DB แยกใน test process ไม่มีการ redeem จริง ให้ build frontend ก่อน static-serving test
 
-การทดสอบครั้งนี้ยังไม่ยืนยันการ redeem จริงหรือความพร้อมของ proxy ภายนอก ต้องตั้งเบอร์และทดสอบซองจริงโดยเจ้าของก่อนเปิดบริการ
+Production ต้องใช้ persistent disk, สำรอง DB และ delivery.key, HTTPS reverse proxy และ APP_ORIGIN ตรงโดเมนจริง อ่านรายละเอียดใน LAUNCH.md

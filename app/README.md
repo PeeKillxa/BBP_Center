@@ -1,40 +1,15 @@
-# BBP Center — Prototype (โหมดสาธิต)
+# BBP Center frontend
 
-หน้าร้านและบัญชีลูกค้าส่วนหลักเป็นต้นแบบ ข้อมูลซื้อ/จอง/ฟาร์มและยอดเดโมเป็นข้อมูลจำลอง มีบริการกระเป๋าเงินจริงแยกที่ `/wallet/live` เชื่อม TrueMoney ฝั่งเซิร์ฟเวอร์เมื่อร้านเปิดใช้งาน ดู `../server/README.md` (ยอดจริงยังใช้ซื้อสินค้าเดโมไม่ได้)
+React + TypeScript + Tailwind + React Router ใช้ session และข้อมูลจริงจาก Node server ไม่มีสินค้า รีวิว ยอดเงิน หรือแผงสิทธิ์จำลอง
 
-## วิธีรัน
+`npm ci`, `npm run dev` เปิด `http://localhost:5173` พร้อม backend ที่ port 3001 ผ่าน Vite proxy
 
-ต้องมี Node.js 24+ และ npm 11+
+`npm test` รัน unit tests ที่ไม่อยู่ในหน้าเว็บ · `npm run build` ตรวจ TypeScript และสร้าง `dist/` สำหรับ Node server
 
-```bash
-cd app
-npm install
-npm run dev        # http://localhost:5173/
-npm test           # Vitest: กฎราคา เวลา ซื้อ จอง เติมเงิน สแตนด์บาย
-npm run build      # ตรวจ type แล้ว build ไปที่ dist/
-npm run preview    # เปิด build ที่ http://localhost:4173/
-```
+หน้าใช้งาน: `/`, `/maps`, `/listing/:id`, `/farm`, `/login`, `/register`, `/wallet`, `/account`, `/owner`, `/help`
 
-## ลองใช้
+Source หลัก: `src/production/` · ส่วนประกอบหน้าจอ: `src/components/` · ธีม: `src/store/theme.ts` (localStorage เก็บเฉพาะธีม)
 
-- ปุ่ม **Demo Controls** มุมล่างซ้าย: สลับผู้ใช้ตัวอย่าง A / B / C, ปรับยอดเงิน, เลือกผลเติมเงินครั้งถัดไป, เดินนาฬิกาทดสอบ, สลับมุมมองลูกค้า/เจ้าของร้าน, จำลองโหลดผิดพลาด, รีเซ็ตข้อมูล
-- เข้าสู่ระบบด้วย `demo.a@example.invalid` และรหัสผ่านใดก็ได้ 8 ตัวขึ้นไป (ไม่ถูกบันทึก)
-- คูปองตัวอย่าง: `DEMO10` (ไอดี), `FARM5` (ฟาร์ม), `OLD50` (หมดอายุ)
-- ชื่อผู้ใช้ Roblox ในฟอร์มฟาร์มต้องขึ้นต้นด้วย `demo_`
-- หน้าควบคุมงานฟาร์ม: `/owner/farm` (ต้องสลับเป็นมุมมองเจ้าของร้านก่อน)
+โลโก้ `public/brand/bbp-center-logo.png` เป็นไฟล์เจ้าของร้าน ไม่ถูกแก้ไข
 
-## โครงสร้าง
-
-| โฟลเดอร์ | หน้าที่ |
-| --- | --- |
-| `src/config/` | ราคา อัตรา เพดาน เวลา ช่องทางติดต่อ |
-| `src/domain/` | กฎธุรกิจแบบฟังก์ชันบริสุทธิ์ + เทส |
-| `src/mock/` | ข้อมูลตัวอย่างและข้อมูลส่งมอบปลอม |
-| `src/store/` | state สาธิตใน localStorage และนาฬิกาทดสอบ |
-| `src/components/`, `src/pages/` | หน้าจอ |
-
-## โลโก้และภาพ
-
-โลโก้อยู่ที่ `public/brand/bbp-center-logo.png` คัดลอกจาก `โลโก้เกมเมอร์ BBP Center นีออนสีน้ำเงิน - Edited.png` ของเจ้าของร้านโดยไม่แก้ไข (1254×1254 มุมโปร่งใส ขนาด 1.9 MB) ถ้าจะเปลี่ยนให้แทนไฟล์นี้ (ภาพสี่เหลี่ยมจัตุรัส) ภาพสินค้าเป็น placeholder ที่สร้างด้วยโค้ดใน `src/components/shop.tsx` (`ListingArt`)
-
-ดูเอกสารส่งต่อระบบจริงที่ `../docs/HANDOFF.md`
+ดู [คู่มือเปิดร้าน](../docs/LAUNCH.md) และ [OAuth](../docs/OAUTH_SETUP.md)

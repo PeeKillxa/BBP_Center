@@ -49,14 +49,14 @@ DISCORD_CLIENT_SECRET=
 
 ## บัญชีและยอดเงิน
 
-- เข้าสู่ระบบสำเร็จจะกลับ `/wallet/live` โดยใช้ session ของ server และบัญชีจริงเดิมเมื่อกลับมา login ซ้ำ
+- เข้าสู่ระบบสำเร็จจะกลับสู่กระเป๋าเงิน โดยใช้ session ของ server และบัญชีเดิมเมื่อกลับมา login ซ้ำ (`/wallet/live` เป็นลิงก์ redirect เดิมไป `/wallet`)
 - ไม่มีการส่ง access token / ID token / refresh token ให้ browser หรือเก็บลง localStorage/DB; ใช้ token ระหว่าง callback แล้วทิ้ง
 - state ใช้ครั้งเดียว หมดอายุ 10 นาที และผูกกับ cookie HttpOnly/SameSite=Lax; session ปกติยังเป็น SameSite=Strict
 - Google ตรวจลายเซ็น ID token กับ Google JWKS, issuer, audience, expiry, nonce และ authorized party; Discord ตรวจ issuer callback แล้วอ่านตัวตนจาก `/users/@me` ผ่าน access token
 - ต้องมีอีเมลยืนยันแล้วจาก provider และอ้างอิงบัญชีด้วย `(provider, subject)` ไม่ใช่อีเมลอย่างเดียว
 - หากอีเมลตรงบัญชีเดิม ระบบไม่รวมบัญชีอัตโนมัติ ให้เข้าบัญชีเดิมก่อน แล้วในกระเป๋าเงินจริงกด **เชื่อมบัญชี Google/Discord** การเชื่อมใช้ยอดเดิม ไม่สร้างยอดใหม่ และไม่ย้าย provider จากบัญชีอื่น
-- หน้า login/register ใช้ปุ่ม social จริงแล้ว แบบฟอร์มอีเมลบนสองหน้านั้นยังมีป้ายเดโม บัญชีอีเมลจริงอยู่ใน `/wallet/live`
-- การซื้อ/จอง/ฟาร์มยังเป็นเดโมตามเดิม จึงไม่ใช้ยอดเงินจริงซื้อสินค้าในรอบนี้
+- หน้า login/register ใช้ social และอีเมล/รหัสผ่านจริงผ่าน server ทั้งหมด ใช้บัญชีและยอดเงินเดียวกัน
+- การซื้อ/จอง/ฟาร์มใช้ server และฐานข้อมูลแล้ว อ่านการตั้งบัญชีเจ้าของร้านและเปิดรับคำสั่งซื้อใน `LAUNCH.md`
 
 ## ผลตรวจของการพัฒนา
 

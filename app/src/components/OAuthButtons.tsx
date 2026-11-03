@@ -42,7 +42,7 @@ export function OAuthButtons({ link = false, linked = [] }: { link?: boolean; li
           {link ? isLinked ? `เชื่อม ${provider.name} แล้ว` : `เชื่อมบัญชี ${provider.name}` : `ดำเนินการต่อด้วย ${provider.name}`}
         </Button>
         <p id={`oauth-${provider.id}-hint`} className="mt-1 text-xs text-muted">
-          {loading ? 'กำลังตรวจสอบช่องทาง…' : !available[provider.id] ? 'ร้านยังไม่เปิดช่องทางนี้' : link ? 'ใช้เข้าสู่บัญชีและยอดเงินเดิมได้' : 'เข้าสู่บัญชีจริงและกระเป๋าเงินจริง'}
+          {loading ? 'กำลังตรวจสอบช่องทาง…' : !available[provider.id] ? 'ร้านยังไม่เปิดช่องทางนี้' : link ? 'ใช้เข้าสู่บัญชีและยอดเงินเดิมได้' : 'เข้าสู่บัญชี BBP Center'}
         </p>
       </div>
     })}

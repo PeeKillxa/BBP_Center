@@ -43,6 +43,10 @@ export function openDatabase(path) {
       id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), topup_id TEXT UNIQUE NOT NULL REFERENCES topups(id),
       amount_satang INTEGER NOT NULL CHECK(amount_satang > 0), created_at INTEGER NOT NULL
     );`)
+  db.exec(`CREATE TABLE IF NOT EXISTS commerce_ledger (
+    id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), amount_satang INTEGER NOT NULL,
+    kind TEXT NOT NULL, reference TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(kind,reference)
+  );`)
   // After a process interruption the provider may already have received the request.
   db.exec("UPDATE topups SET status='needs-review' WHERE status='processing'")
   return db
@@ -51,7 +55,7 @@ export function openDatabase(path) {
 export const publicTopup = (row) => ({ id: row.id, status: row.status, amountSatang: row.amount_satang, createdAt: row.created_at })
 
 export function wallet(db, userId) {
-  const balance = db.prepare('SELECT COALESCE(SUM(amount_satang),0) AS balance FROM ledger WHERE user_id=?').get(userId).balance
+  const balance = db.prepare('SELECT COALESCE(SUM(amount_satang),0) AS balance FROM (SELECT amount_satang FROM ledger WHERE user_id=? UNION ALL SELECT amount_satang FROM commerce_ledger WHERE user_id=?)').get(userId, userId).balance
   const topups = db.prepare('SELECT * FROM topups WHERE user_id=? ORDER BY created_at DESC LIMIT 50').all(userId).map(publicTopup)
   return { balanceSatang: balance, topups }
 }

@@ -31,5 +31,5 @@ const dtf = new Intl.DateTimeFormat('th-TH', {
   timeStyle: 'short',
   timeZone: 'Asia/Bangkok',
 })
-/** Display convention for the prototype: Asia/Bangkok. Confirm with owner for production. */
+/** All customer-facing timestamps use the shop's Asia/Bangkok timezone. */
 export const formatDateTime = (ms: number): string => dtf.format(new Date(ms))
