@@ -66,3 +66,32 @@ Container ใช้ UID 10001 โดยไม่ใช้ root, อ่าน roo
 ต้องมี HTTPS และช่องทางเข้าจากภายนอกที่ผู้ดูแลเครือข่ายอนุญาต จากนั้นเปลี่ยน NODE_ENV=production, APP_ORIGIN เป็นชื่อ HTTPS จริง, ใส่ OAuth credentials/แก้ callback ใน provider และเปิด TrueMoney ตาม LAUNCH.md
 
 พอร์ต 3080 มีไว้ตรวจเว็บผ่าน LAN การติดตั้งนี้ไม่ได้เพิ่ม public DNS route หรือแก้ Cloudflare Tunnel เดิม
+
+## HTTPS ผ่าน DuckDNS (ไฟล์เตรียมติดตั้ง)
+
+`compose.nas.https.yaml` เป็นชุด HTTPS สำหรับ `bbpcenter.duckdns.org` ใช้แทน compose.nas.yaml เมื่อพร้อม ไม่ต้องรันสองชุดพร้อมกัน
+
+ใบรับรองใช้ Caddy พร้อม DuckDNS DNS challenge จึงออกและต่ออายุได้โดยไม่ต้องเปิดพอร์ต 80 ให้ Let's Encrypt ส่วนการเข้าเว็บยังต้องมี DNS และเส้นทางถึง NAS ที่ใช้งานได้ ใบรับรองไม่ได้สร้างเส้นทางจากอินเทอร์เน็ตให้เอง
+
+ใส่ token ใน `deploy/https/.env` จากตัวอย่าง ป้องกันไฟล์นี้ด้วย chmod 600 และเก็บ Caddy data/config บน NAS โดย UID 10002:
+
+```sh
+mkdir -p deploy/https/data deploy/https/config
+chown -R 10002:10002 deploy/https/data deploy/https/config
+chmod 700 deploy/https/data deploy/https/config
+chmod 600 deploy/https/.env
+docker compose -f compose.nas.https.yaml up -d --build
+```
+
+พอร์ต HTTPS คือ 443 ของ NAS ส่วนพอร์ต 3080 เปลี่ยนเป็น redirect ไปชื่อ HTTPS พอร์ต 80 ของ OpenMediaVault ยังคงเดิม Backend เปิดเฉพาะในเครือข่าย Docker
+
+ชุด HTTPS บังคับ NODE_ENV=production และ APP_ORIGIN=https://bbpcenter.duckdns.org คัดลอก OAuth credentials จริงมาใส่ server/.env แล้วเพิ่ม URI ต่อไปนี้ในหน้าจัดการ client ของผู้ให้บริการก่อนล็อกอิน:
+
+```text
+Google:  https://bbpcenter.duckdns.org/api/auth/oauth/google/callback
+Discord: https://bbpcenter.duckdns.org/api/auth/oauth/discord/callback
+```
+
+Google Authorized JavaScript origin (ถ้ามีช่องนี้): `https://bbpcenter.duckdns.org` คง localhost callback เดิมไว้ได้ การใส่ client credentials ทำให้ปุ่มเปิดได้ แต่ยังต้องให้เจ้าของบัญชีตั้ง callback และยืนยันการล็อกอินจริง
+
+ถ้า DNS ชี้ IP ภายใน NAS ชื่อนี้จะใช้ได้เฉพาะอุปกรณ์ที่เข้าถึง LAN นั้น หากต้องให้ลูกค้าภายนอกเข้า ต้องเปลี่ยนไปใช้เส้นทางสาธารณะที่ใช้งานได้ก่อน ไม่ใช้ Quick Tunnel เป็น URL ถาวรของร้าน

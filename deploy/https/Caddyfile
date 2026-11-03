@@ -1,0 +1,19 @@
+{
+	admin off
+	persist_config off
+	auto_https disable_redirects
+	servers {
+		protocols h1 h2
+	}
+}
+
+https://bbpcenter.duckdns.org:8443 {
+	tls {
+		dns duckdns {env.DUCKDNS_API_TOKEN}
+	}
+	reverse_proxy web:3001
+}
+
+http://:8080 {
+	redir https://bbpcenter.duckdns.org{uri} permanent
+}

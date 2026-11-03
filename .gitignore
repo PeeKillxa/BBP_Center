@@ -10,3 +10,5 @@ skills-lock.json
 .env.*
 !.env.example
 server/data/
+deploy/https/data/
+deploy/https/config/

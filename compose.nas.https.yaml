@@ -1,0 +1,55 @@
+name: bbp-center
+services:
+  web:
+    build: .
+    image: bbp-center-nas:local
+    container_name: bbp-center
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      APP_ORIGIN: https://bbpcenter.duckdns.org
+    volumes:
+      - ./server/data:/opt/bbp/server/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 2
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/catalog').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+  https:
+    build: ./deploy/https
+    image: bbp-center-https:local
+    container_name: bbp-center-https
+    restart: unless-stopped
+    env_file: ./deploy/https/.env
+    depends_on:
+      web: {condition: service_healthy}
+    ports:
+      - "${NAS_BIND_IP:-127.0.0.1}:443:8443"
+      - "${NAS_BIND_IP:-127.0.0.1}:${NAS_PORT:-3080}:8080"
+    volumes:
+      - ./deploy/https/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/https/data:/data
+      - ./deploy/https/config:/config
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    cpus: 1
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
