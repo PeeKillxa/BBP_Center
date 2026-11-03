@@ -21,6 +21,7 @@ const expiryTimer = setInterval(() => { try { commerce.sweep() } catch { console
 expiryTimer.unref()
 const receive = createPayments({ db, phone, redeem: redeemVoucher })
 const server = createApi({ db, receive, origin, enabled, commerceOptions, staticHandler: staticApp(resolve('../app/dist')) })
-server.listen(Number(process.env.PORT ?? 3001), '127.0.0.1', () => {
-  console.info(`BBP payment server ready at http://127.0.0.1:${server.address().port}; payments ${enabled ? 'enabled' : 'disabled'}`)
+const host = process.env.HOST ?? '127.0.0.1'
+server.listen(Number(process.env.PORT ?? 3001), host, () => {
+  console.info(`BBP server ready at http://${host}:${server.address().port}; payments ${enabled ? 'enabled' : 'disabled'}`)
 })

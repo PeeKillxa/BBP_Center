@@ -5,6 +5,7 @@ import { Button, ButtonLink, Card, EmptyState, Notice, PageHeader, Field, Badge 
 import { Logo } from '../components/Logo'
 import { formatTHB } from '../lib/money'
 import { formatDurationTH } from '../lib/time'
+import { idempotencyKey } from '../lib/idempotency'
 import { api, type Listing, type Quote } from './api'
 import { useAction, useShop } from './context'
 
@@ -175,8 +176,8 @@ export function ListingDetail() {
   const listing = catalog?.listings.find((item) => item.id === id)
   const [accepted, setAccepted] = useState(false),
     [image, setImage] = useState(0)
-  const buyKey = useRef(crypto.randomUUID()),
-    reserveKey = useRef(crypto.randomUUID())
+  const buyKey = useRef(idempotencyKey()),
+    reserveKey = useRef(idempotencyKey())
   if (loading) return <p role="status">กำลังโหลดสินค้า…</p>
   if (!listing) return <PageHeader title="ไม่พบสินค้านี้" />
   const submit = (reserve: boolean) =>
@@ -286,7 +287,7 @@ export function Farm() {
     [quote, setQuote] = useState<Quote | null>(null),
     [quoteError, setQuoteError] = useState(''),
     [accepted, setAccepted] = useState(false)
-  const key = useMemo(() => crypto.randomUUID(), [diamonds])
+  const key = useMemo(() => idempotencyKey(), [diamonds])
   useEffect(() => {
     let active = true
     setQuote(null)

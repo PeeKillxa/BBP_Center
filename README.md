@@ -6,4 +6,6 @@
 
 ตั้งค่า Google/Discord: [docs/OAUTH_SETUP.md](docs/OAUTH_SETUP.md)
 
+ติดตั้งบน NAS ในโฟลเดอร์ STUDENT: [docs/NAS_SETUP.md](docs/NAS_SETUP.md)
+
 ไม่มีบัญชี ยอดเงิน สินค้า รีวิว หรือปุ่มสิทธิ์เจ้าของร้านที่สร้างไว้ล่วงหน้า ข้อมูลร้านและการเงินเก็บใน `server/data/` ซึ่งไม่อยู่ใน Git

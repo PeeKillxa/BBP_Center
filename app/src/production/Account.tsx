@@ -4,6 +4,7 @@ import { Card, Button, ButtonLink, Field, Notice, PageHeader } from '../componen
 import { OAuthButtons } from '../components/OAuthButtons'
 import { formatTHB } from '../lib/money'
 import { formatDateTime } from '../lib/time'
+import { idempotencyKey } from '../lib/idempotency'
 import { api, messageFor, type Account as AccountData, type WalletData } from './api'
 import { useAction, useRemote, useShop } from './context'
 
@@ -102,7 +103,7 @@ function WalletContent() {
     [accepted, setAccepted] = useState(false),
     [message, setMessage] = useState('')
   const { data: health } = useRemote<{ enabled: boolean }>('/health')
-  const key = useMemo(() => crypto.randomUUID(), [voucher])
+  const key = useMemo(() => idempotencyKey(), [voucher])
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (!accepted) return
@@ -332,6 +333,7 @@ function AccountContent() {
                     variant="secondary"
                     onClick={() =>
                       void action.run(async () => {
+                        if (!navigator.clipboard) throw new Error('โปรดเลือกและคัดลอกข้อความส่งมอบด้วยตนเอง เบราว์เซอร์นี้ไม่รองรับการคัดลอกอัตโนมัติ')
                         await navigator.clipboard.writeText(revealed[order.id])
                       })
                     }
@@ -403,7 +405,7 @@ function AccountContent() {
                         const result = await api<{ id: string }>(
                           '/reservations/settle',
                           { reservationId: item.id },
-                          (settleKeys.current[item.id] ??= crypto.randomUUID()),
+                          (settleKeys.current[item.id] ??= idempotencyKey()),
                         )
                         await reload()
                         nav(`/account/orders/${result.id}`)
