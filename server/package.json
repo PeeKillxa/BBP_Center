@@ -2,10 +2,15 @@
   "name": "bbp-payments-server",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/index.mjs",
     "test": "node --test test/*.test.mjs"
   },
-  "dependencies": { "@fortune-inc/tw-voucher": "1.1.2" }
+  "dependencies": {
+    "@fortune-inc/tw-voucher": "1.1.2",
+    "jose": "6.2.15"
+  }
 }

@@ -15,6 +15,7 @@ test('API authenticates on the server, rejects CSRF and isolates users and balan
     body: data ? JSON.stringify(data) : undefined,
   })
   try {
+    assert.deepEqual(await (await request('/api/auth/session')).json(), { user: null, providers: [] })
     assert.equal((await request('/api/wallet')).status, 401)
     const credentials = { email: 'a@example.invalid', password: 'test-password-1234' }
     assert.equal((await request('/api/auth/register', credentials, null, { Origin: 'https://evil.invalid' })).status, 403)

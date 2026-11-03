@@ -21,7 +21,8 @@ API ส่งรหัสซองกับเบอร์ผู้รับใ�
 - POST ต้องมี Origin ตรงกับ `APP_ORIGIN` และ JSON; rate limit 20 POST/นาที/IP สำหรับ process เดียว
 - ยอดเงินจริงอยู่ใน SQLite และแยกจาก localStorage ของเดโม ไม่เปลี่ยนเมื่อกด Demo Controls/รีเซ็ตเดโม
 - สินค้า จอง ฟาร์ม และการเติมผ่านสลิปยังเป็นเดโม **ยอดเงินจริงยังใช้ซื้อไม่ได้** จึงไม่ควรชวนลูกค้าเติมก่อนร้านมีขั้นตอนรองรับยอดดังกล่าว
-- ยังไม่มีอีเมลยืนยัน/รีเซ็ตรหัสผ่านจริง หรือหน้าแอดมินสำหรับเงินจริง บัญชีนี้ไม่เชื่อม Google/Discord
+- รองรับ Google/Discord จริงผ่าน OAuth authorization code + PKCE ฝั่งเซิร์ฟเวอร์ ดู `docs/OAUTH_SETUP.md` เมื่อยังไม่ตั้ง credentials ปุ่มจะปิดพร้อมเหตุผล
+- ยังไม่มีอีเมลยืนยัน/รีเซ็ตรหัสผ่านจริงของบัญชีอีเมล หรือหน้าแอดมินสำหรับเงินจริง
 
 ## กันรับซ้ำและผลไม่แน่นอน
 
@@ -35,7 +36,7 @@ Timeout, error จาก provider, response ผิดรูปแบบ หร�
 
 ## การทดสอบและ deployment
 
-`npm test` ใช้ provider จำลองเท่านั้น ไม่ส่งซองจริง รวม HTTP auth/CSRF, concurrent retry, duplicate cross-user, timeout/late result, malformed amount และ restart
+`npm test` ใช้ provider จำลองเท่านั้น ไม่ส่งซองจริง รวม HTTP auth/CSRF, concurrent retry, duplicate cross-user, timeout/late result, malformed amount, restart และ OAuth state/PKCE/ID-token/account linking
 
 Production ต้องตั้ง `NODE_ENV=production`, `APP_ORIGIN=https://โดเมนจริง` แล้วตั้ง reverse proxy ให้ `/api/*` ไป loopback port 3001 พร้อมเสิร์ฟ `app/dist` และ SPA fallback อย่าเปิดพอร์ต DB/API แยกสู่ public และอย่า log request body, cookie, voucher หรือ password
 

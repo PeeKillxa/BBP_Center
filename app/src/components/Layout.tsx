@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, MotionConfig } from 'motion/react'
 import { Bell, CircleHelp, FlaskConical, House, LayoutGrid, LogIn, Monitor, Moon, Search, Sparkles, Sun, User, Wallet } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { balanceOf } from '../domain/engine'
 import { formatTHB } from '../lib/money'
@@ -50,10 +50,16 @@ function SearchBox({ className }: { className?: string }) {
   )
 }
 
-function AccountArea() {
+type LiveHeader = { user: { id: string; email: string }; balanceSatang: number }
+
+function AccountArea({ live }: { live: LiveHeader | null | undefined }) {
   const s = useDemo()
   const user = useCurrentUser()
   const loc = useLocation()
+  if (live === undefined) return <span className="text-xs text-muted" role="status">กำลังตรวจบัญชี…</span>
+  if (live) return <Link to="/wallet/live" className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent/40 bg-accent-soft px-3 text-sm font-bold" aria-label={`บัญชีจริง ${live.user.email} ยอดเงิน ${formatTHB(live.balanceSatang)}`}>
+    <Wallet className="size-4 text-accent" aria-hidden /><span>{formatTHB(live.balanceSatang)}</span><span className="hidden md:inline">· บัญชีจริง</span>
+  </Link>
   if (!user)
     return (
       <Link to={`/login?next=${encodeURIComponent(loc.pathname)}`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover">
@@ -63,9 +69,10 @@ function AccountArea() {
   const unread = s.notifications.filter((n) => n.userId === user.id && !n.read).length
   return (
     <div className="flex items-center gap-2">
-      <Link to="/wallet" className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent/40 bg-accent-soft px-3 text-sm font-bold text-ink" aria-label={`ยอดเงิน ${formatTHB(balanceOf(s, user.id))} ไปหน้ากระเป๋าเงิน`}>
+      <Link to="/wallet" className="inline-flex h-10 items-center gap-2 rounded-xl border border-accent/40 bg-accent-soft px-3 text-sm font-bold text-ink" aria-label={`ยอดเงินสาธิต ${formatTHB(balanceOf(s, user.id))} ไปหน้ากระเป๋าเงินสาธิต`}>
         <Wallet className="size-4 text-accent" aria-hidden />
         <span className="tabular-nums">{formatTHB(balanceOf(s, user.id))}</span>
+        <span className="text-[10px] font-normal">เดโม</span>
       </Link>
       <Link to="/account/notifications" className="relative hidden rounded-xl p-2 text-muted hover:bg-surface-2 hover:text-ink sm:inline-flex" aria-label={`แจ้งเตือน ${unread ? `ยังไม่อ่าน ${unread} รายการ` : ''}`}>
         <Bell className="size-5" aria-hidden />
@@ -89,12 +96,23 @@ const MOBILE = [
 
 export function Layout() {
   const loc = useLocation()
+  const [live, setLive] = useState<LiveHeader | null>()
+  useEffect(() => {
+    let active = true
+    fetch('/api/auth/session', { credentials: 'same-origin' }).then(async response => {
+      const session = response.ok ? await response.json() : null
+      const walletResponse = session?.user ? await fetch('/api/wallet', { credentials: 'same-origin' }) : null
+      const account = walletResponse?.ok ? await walletResponse.json() : null
+      if (active) setLive(account)
+    }).catch(() => { if (active) setLive(null) })
+    return () => { active = false }
+  }, [loc.pathname])
   return (
     <MotionConfig reducedMotion="user">
       <a href="#main" className="sr-only z-[80] rounded-lg bg-primary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:top-2 focus:left-2">ข้ามไปยังเนื้อหา</a>
       <div className="flex items-center justify-center gap-2 bg-warning/15 px-4 py-1.5 text-center text-xs font-medium text-warning">
         <FlaskConical className="size-3.5 shrink-0" aria-hidden />
-        <span>{loc.pathname === '/wallet/live' ? 'กระเป๋าเงินจริง · ใช้บัญชีแยกจากเดโม · สินค้าและบริการส่วนอื่นยังเป็นต้นแบบ' : 'ต้นแบบโหมดสาธิต · ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ไม่มีการตัดเงินจริง ห้ามโอนเงินหรือกรอกบัญชีจริง'}</span>
+        <span>{['/wallet/live', '/login', '/register'].includes(loc.pathname) ? 'สมาชิกและกระเป๋าเงินจริง · สินค้าและบริการส่วนอื่นยังเป็นต้นแบบ' : 'ต้นแบบโหมดสาธิต · ข้อมูลทั้งหมดเป็นข้อมูลจำลอง ไม่มีการตัดเงินจริง ห้ามโอนเงินหรือกรอกบัญชีจริง'}</span>
       </div>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
@@ -111,7 +129,7 @@ export function Layout() {
           <SearchBox className="mx-auto hidden w-full max-w-sm md:block" />
           <div className="ml-auto flex items-center gap-2">
             <ThemeSwitch />
-            {loc.pathname === '/wallet/live' ? <Link to="/wallet" className="text-sm text-accent underline">กลับเดโม</Link> : <AccountArea />}
+            {loc.pathname === '/wallet/live' ? <Link to="/wallet" className="text-sm text-accent underline">กลับเดโม</Link> : <AccountArea live={live} />}
           </div>
         </div>
         <div className="px-4 pb-2 md:hidden">
@@ -137,7 +155,7 @@ export function Layout() {
         <ul className="grid grid-cols-5">
           {MOBILE.map(({ to, label, icon: I, end }) => (
             <li key={to}>
-              <NavLink to={to} end={end} className={({ isActive }) => cn('flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium', isActive ? 'text-accent' : 'text-muted')}>
+              <NavLink to={live && (to === '/wallet' || to === '/account') ? '/wallet/live' : to} end={end} className={({ isActive }) => cn('flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium', isActive ? 'text-accent' : 'text-muted')}>
                 <I className="size-5" aria-hidden />
                 {label}
               </NavLink>

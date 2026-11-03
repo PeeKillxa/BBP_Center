@@ -4,7 +4,7 @@ import { createApi } from './api.mjs'
 import { createPayments, openDatabase } from './payments.mjs'
 import { redeemVoucher } from './provider.mjs'
 
-const origin = process.env.APP_ORIGIN ?? 'http://localhost:5173'
+const origin = new URL(process.env.APP_ORIGIN ?? 'http://localhost:5173').origin
 const phone = process.env.TRUEMONEY_RECIPIENT_PHONE?.trim()
 const enabled = process.env.TRUEMONEY_ENABLED === 'true'
 if (enabled && !/^0[689]\d{8}$/.test(phone ?? '')) throw new Error('Configure TRUEMONEY_RECIPIENT_PHONE before enabling payments')

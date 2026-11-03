@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Gift, RefreshCw, Wallet } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button, Card, Field, Notice, PageHeader } from '../components/ui'
+import { OAuthButtons } from '../components/OAuthButtons'
 import { formatTHB } from '../lib/money'
 import { formatDateTime } from '../lib/time'
 
@@ -16,6 +17,14 @@ const ERROR: Record<string, string> = {
   'idempotency-conflict': 'รายการเดิมใช้กับซองอื่นแล้ว กรุณาเริ่มรายการใหม่',
   'not-configured': 'ร้านยังไม่เปิดรับซองเงินจริง',
   'rate-limited': 'ทำรายการถี่เกินไป กรุณารอสักครู่',
+  'oauth-not-configured': 'ร้านยังไม่เปิดใช้ช่องทางเข้าสู่ระบบนี้',
+  'oauth-invalid-state': 'คำขอเข้าสู่ระบบหมดอายุหรือไม่ตรงกับเบราว์เซอร์ กรุณาลองอีกครั้ง',
+  'oauth-denied': 'ยกเลิกการเข้าสู่ระบบแล้ว',
+  'oauth-account-exists': 'มีบัญชีอีเมลนี้แล้ว กรุณาเข้าบัญชีเดิม แล้วกดเชื่อม Google/Discord เพื่อใช้ยอดเงินเดิม',
+  'oauth-already-linked': 'บัญชีผู้ให้บริการนี้เชื่อมกับบัญชีอื่นแล้ว',
+  'oauth-link-expired': 'เซสชันสำหรับเชื่อมบัญชีหมดอายุ กรุณาเข้าสู่ระบบใหม่',
+  'oauth-email-unverified': 'กรุณายืนยันอีเมลกับ Google/Discord ก่อนเข้าสู่ระบบ',
+  'oauth-failed': 'เข้าสู่ระบบกับผู้ให้บริการไม่สำเร็จ กรุณาลองใหม่',
 }
 async function api(path: string, data?: object, key?: string) {
   let response: Response
@@ -33,6 +42,7 @@ async function api(path: string, data?: object, key?: string) {
 
 export function LiveWallet() {
   const [account, setAccount] = useState<Account | null>(null)
+  const [linked, setLinked] = useState<string[]>([])
   const [enabled, setEnabled] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [register, setRegister] = useState(false)
@@ -41,11 +51,16 @@ export function LiveWallet() {
   const [voucher, setVoucher] = useState('')
   const [accepted, setAccepted] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [message, setMessage] = useState(() => new URLSearchParams(window.location.search).get('oauth') === 'success' ? 'เข้าสู่ระบบ / เชื่อมบัญชีสำเร็จ' : '')
+  const [error, setError] = useState(() => ERROR[new URLSearchParams(window.location.search).get('oauth_error') ?? ''] ?? '')
   const attempt = useRef<{ input: string; key: string } | null>(null)
   const refresh = async () => {
-    try { setAccount(await api('/wallet')) } catch { setAccount(null) }
+    try {
+      const session = await api('/auth/session')
+      if (!session.user) { setAccount(null); setLinked([]); return }
+      setAccount(await api('/wallet'))
+      setLinked(session.providers)
+    } catch { setAccount(null); setLinked([]) }
   }
   useEffect(() => {
     let active = true
@@ -90,6 +105,8 @@ export function LiveWallet() {
         <Card className="mx-auto max-w-md p-5">
           <h2 className="mb-4 text-lg font-bold">{register ? 'สมัครบัญชีกระเป๋าเงินจริง' : 'เข้าสู่ระบบกระเป๋าเงินจริง'}</h2>
           <p className="mb-4 text-sm text-muted">บัญชีนี้แยกจากบัญชีสาธิต</p>
+          <OAuthButtons />
+          <p className="my-4 text-center text-xs text-muted">หรือใช้อีเมลและรหัสผ่าน</p>
           <form className="space-y-4" onSubmit={authenticate}>
             <Field label="อีเมล" type="email" required value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
             <Field label="รหัสผ่าน" type="password" required minLength={12} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} autoComplete={register ? 'new-password' : 'current-password'} hint="12–128 ตัวอักษร" />
@@ -113,6 +130,10 @@ export function LiveWallet() {
                   finally { setBusy(false) }
                 }}>ออกจากระบบ</Button>
               </div>
+            </Card>
+            <Card className="p-5">
+              <h2 className="mb-3 font-bold">ช่องทางเข้าสู่บัญชีนี้</h2>
+              <OAuthButtons link linked={linked} />
             </Card>
             <Card className="p-5">
               <h2 className="mb-3 font-bold">ประวัติรับซอง</h2>

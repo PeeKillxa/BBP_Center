@@ -24,6 +24,15 @@ export function openDatabase(path) {
   db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS identities (
+      provider TEXT NOT NULL, subject TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id),
+      email TEXT NOT NULL, PRIMARY KEY(provider, subject), UNIQUE(user_id, provider)
+    );
+    CREATE TABLE IF NOT EXISTS oauth_attempts (
+      state_hash TEXT PRIMARY KEY, provider TEXT NOT NULL, browser_hash TEXT NOT NULL,
+      verifier TEXT NOT NULL, nonce TEXT NOT NULL, expires_at INTEGER NOT NULL,
+      link_user_id TEXT REFERENCES users(id), link_session_hash TEXT
+    );
     CREATE TABLE IF NOT EXISTS topups (
       id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), key TEXT NOT NULL,
       voucher_hash TEXT UNIQUE NOT NULL, recipient_hash TEXT NOT NULL, status TEXT NOT NULL,

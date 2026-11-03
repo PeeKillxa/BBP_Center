@@ -3,6 +3,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useToast } from '../../components/feedback'
 import { Logo } from '../../components/Logo'
+import { OAuthButtons } from '../../components/OAuthButtons'
 import { Button, Card, Field, Notice } from '../../components/ui'
 import { uid } from '../../lib/util'
 import { safeNext } from '../../lib/navigation'
@@ -16,7 +17,7 @@ function Shell({ title, children, footer }: { title: string; children: ReactNode
       <div className="mb-6 flex justify-center"><Logo size={56} /></div>
       <Card className="p-6">
         <h1 className="mb-1 text-2xl font-bold">{title}</h1>
-        <Notice tone="warning" className="my-4">โหมดสาธิต: ไม่มีการสร้างบัญชีจริงและไม่บันทึกรหัสผ่าน ห้ามใช้รหัสผ่านจริง</Notice>
+        <Notice tone="info" className="my-4">Google/Discord ใช้บัญชีจริงสำหรับกระเป๋าเงินจริง ส่วนแบบฟอร์มอีเมลด้านล่างเป็นเดโม ให้ใช้ข้อมูลสมมติเท่านั้น</Notice>
         {children}
       </Card>
       <p className="mt-4 text-center text-sm text-muted">{footer}</p>
@@ -24,30 +25,8 @@ function Shell({ title, children, footer }: { title: string; children: ReactNode
   )
 }
 
-/** Social buttons never pretend OAuth succeeded: they say so and sign in as a sample user. */
-function SocialButtons({ onDone }: { onDone: (userId: string) => void }) {
-  const [busy, setBusy] = useState<string | null>(null)
-  const go = (p: string) => {
-    setBusy(p)
-    window.setTimeout(() => {
-      setBusy(null)
-      onDone('u-a')
-    }, 600)
-  }
-  return (
-    <div className="space-y-2">
-      {['Google', 'Discord'].map((p) => (
-        <Button key={p} type="button" variant="secondary" className="w-full" loading={busy === p} onClick={() => go(p)} aria-describedby="social-demo">
-          ดำเนินการต่อด้วย {p} (โหมดสาธิต)
-        </Button>
-      ))}
-      <p id="social-demo" className="text-xs text-muted">ไม่ได้เชื่อม OAuth จริง ปุ่มนี้เข้าสู่ระบบเป็น "ผู้ใช้ตัวอย่าง A"</p>
-    </div>
-  )
-}
-
 const Divider = () => (
-  <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />หรือ<span className="h-px flex-1 bg-line" /></div>
+  <div className="my-5 flex items-center gap-3 text-xs text-muted"><span className="h-px flex-1 bg-line" />ทดลองเดโมด้วยอีเมลสมมติ<span className="h-px flex-1 bg-line" /></div>
 )
 
 const useFinish = () => {
@@ -84,7 +63,7 @@ export function Login() {
   }
   return (
     <Shell title="เข้าสู่ระบบ" footer={<>ยังไม่มีบัญชี? <Link to={`/register${params.toString() ? `?${params}` : ''}`} className="text-accent underline">สมัครสมาชิก</Link></>}>
-      <SocialButtons onDone={(id) => finish(id, 'เข้าสู่ระบบแบบสาธิตแล้ว')} />
+      <OAuthButtons />
       <Divider />
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field label="อีเมล" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={err.email} hint="บัญชีสาธิต: demo.a / demo.b / demo.c @example.invalid" />
@@ -126,7 +105,7 @@ export function Register() {
   }
   return (
     <Shell title="สมัครสมาชิก" footer={<>มีบัญชีแล้ว? <Link to="/login" className="text-accent underline">เข้าสู่ระบบ</Link></>}>
-      <SocialButtons onDone={(id) => finish(id, 'เข้าสู่ระบบแบบสาธิตแล้ว')} />
+      <OAuthButtons />
       <Divider />
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field label="ชื่อที่แสดง" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} error={err.name} autoComplete="nickname" />
