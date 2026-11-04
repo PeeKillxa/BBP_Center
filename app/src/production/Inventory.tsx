@@ -1,4 +1,5 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Plus, Upload } from 'lucide-react'
 import { Button, Card, Field } from '../components/ui'
 import { api, type Listing } from './api'
@@ -11,8 +12,11 @@ const area = 'min-h-28 w-full rounded-xl border border-line bg-surface p-3'
 export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; template?: Listing; onSaved?: () => Promise<void> }) {
   const { session, reload, catalog } = useShop()
   const [panel, setPanel] = useState<'category' | 'listing' | null>(null)
+  const [categoryUploading, setCategoryUploading] = useState(false)
+  const [categoryImage, setCategoryImage] = useState('')
   const [name, setName] = useState(''), [message, setMessage] = useState('')
   const category = useAction()
+  const [confirmRemove, setConfirmRemove] = useState(false)
   if (!session.user?.isAdmin) return null
   const done = async (count: number) => {
     setPanel(null)
@@ -25,12 +29,20 @@ export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; t
       {!template && <Button variant="secondary" size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'category'} onClick={() => { setPanel(panel === 'category' ? null : 'category'); setMessage('') }}>{mapId && mapId !== 'all' ? 'เพิ่มหมวดหมู่ย่อย' : 'เพิ่มหมวดหมู่'}</Button>}
       <Button size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'listing'} onClick={() => { setPanel(panel === 'listing' ? null : 'listing'); setMessage('') }}>{template ? 'เติมสต็อก' : 'เพิ่มสินค้า / ไอดี'}</Button>
     </div>
+    {template && template.status !== 'archived' && <div className="space-y-2">
+      {!confirmRemove ? <Button size="sm" variant="ghost" onClick={() => setConfirmRemove(true)}>ลบสินค้า</Button> : <>
+        <p className="text-sm">นำสต็อกพร้อมขายทั้งหมดของ “{template.title}” ออกจากหน้าร้าน?</p>
+        <div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={category.busy} onClick={() => void category.run(async () => { await api('/admin/products/remove', { id: template.id }); setConfirmRemove(false); await reload(); await onSaved?.() })}>ยืนยันลบสินค้า</Button><Button size="sm" variant="ghost" onClick={() => setConfirmRemove(false)}>ยกเลิก</Button></div>
+      </>}
+      {category.error && <p role="alert" className="text-danger">{category.error}</p>}
+    </div>}
     {message && <p role="status" className="text-success">{message}</p>}
     {panel === 'category' && <Card className="max-w-xl p-5">
-      <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void category.run(async () => { await api('/admin/categories', { name, parentId: mapId && mapId !== 'all' ? mapId : null }); setName(''); setPanel(null); setMessage('เพิ่มหมวดหมู่แล้ว'); await reload() }) }}>
+      <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void category.run(async () => { await api('/admin/categories', { name, image: categoryImage, parentId: mapId && mapId !== 'all' ? mapId : null }); setName(''); setCategoryImage(''); setPanel(null); setMessage('เพิ่มหมวดหมู่แล้ว'); await reload() }) }}>
         <p className="text-sm text-muted">เพิ่มใน: {catalog?.maps.find(map => map.id === mapId)?.name ?? 'หมวดหมู่หลัก'}</p>
         <Field label="ชื่อหมวดหมู่" required maxLength={80} value={name} onChange={e => setName(e.target.value)} />
-        <div className="flex gap-2"><Button type="submit" loading={category.busy}>บันทึกหมวดหมู่</Button><Button type="button" variant="ghost" disabled={category.busy} onClick={() => setPanel(null)}>ยกเลิก</Button></div>
+        <CoverPicker value={categoryImage} onChange={setCategoryImage} onBusyChange={setCategoryUploading} />
+        <div className="flex gap-2"><Button type="submit" disabled={categoryUploading} loading={category.busy}>บันทึกหมวดหมู่</Button><Button type="button" variant="ghost" disabled={category.busy} onClick={() => setPanel(null)}>ยกเลิก</Button></div>
         {category.error && <p role="alert" className="text-danger">{category.error}</p>}
       </form>
     </Card>}
@@ -128,4 +140,52 @@ export function categoryPath(maps: { id: string; name: string; parentId?: string
     current = maps.find(map => map.id === parentId)
   }
   return path
+}
+
+export function CoverPicker({ value, onChange, onBusyChange }: { value: string; onChange: (value: string) => void; onBusyChange?: (busy: boolean) => void }) {
+  const upload = useAction()
+  useEffect(() => { onBusyChange?.(upload.busy) }, [upload.busy, onBusyChange])
+  return <div className="space-y-2">
+    {value && <img src={value} alt="ตัวอย่างรูปปกหมวดหมู่" className="aspect-video w-full rounded-xl object-cover" />}
+    <label className="block space-y-2 text-sm">รูปปกหมวดหมู่
+      <input type="file" disabled={upload.busy} accept="image/jpeg,image/png,image/webp" className="block w-full" onChange={event => {
+        const file = event.target.files?.[0]; event.target.value = ''
+        if (!file) return
+        void upload.run(async () => {
+          if (file.size > 5 * 1024 * 1024) throw new Error('รูปต้องไม่เกิน 5 MB')
+          const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = () => reject(new Error('อ่านรูปไม่สำเร็จ')); reader.readAsDataURL(file) })
+          const result = await api<{ url: string }>('/admin/images', { data }); onChange(result.url)
+        })
+      }} />
+    </label>
+    <p className="text-xs text-muted">JPG, PNG, WebP ไม่เกิน 5 MB · รอรูปอัปโหลดเสร็จก่อนบันทึก</p>
+    {upload.busy && <p role="status">กำลังอัปโหลดรูป…</p>}
+    {upload.error && <p role="alert" className="text-danger">{upload.error}</p>}
+  </div>
+}
+
+export function CategoryCard({ category }: { category: { id: string; name: string; image?: string | null } }) {
+  const { catalog, session, reload } = useShop()
+  const [editing, setEditing] = useState(false), [confirm, setConfirm] = useState(false)
+  const [name, setName] = useState(category.name), [image, setImage] = useState(category.image ?? '')
+  const action = useAction()
+  const [uploading, setUploading] = useState(false)
+  const products = catalog?.listings.filter(item => categoryPath(catalog.maps, item.mapId).some(map => map.id === category.id)) ?? []
+  const cover = category.image || products.find(item => item.images.length)?.images[0] || '/brand/bbp-center-logo.png'
+  return <Card className="overflow-hidden">
+    <Link to={`/maps/${category.id}`}>
+      <img src={cover} alt={category.name} loading="lazy" className="aspect-video w-full object-cover" />
+      <div className="space-y-2 p-4"><h3 className="text-xl font-bold">{category.name}</h3><p className="text-sm text-accent">{products.filter(item => item.status === 'available').length} บัญชีพร้อมขาย →</p></div>
+    </Link>
+    {session.user?.isAdmin && <div className="space-y-3 px-4 pb-4">
+      <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" onClick={() => { setEditing(!editing); setConfirm(false) }}>แก้ไข / รูปปก</Button><Button size="sm" variant="ghost" onClick={() => { setConfirm(!confirm); setEditing(false) }}>ลบหมวดหมู่</Button></div>
+      {editing && <form className="space-y-3" onSubmit={event => { event.preventDefault(); void action.run(async () => { await api('/admin/categories/edit', { id: category.id, name, image }); setEditing(false); await reload() }) }}>
+        <Field label="ชื่อหมวดหมู่" required maxLength={80} value={name} onChange={e => setName(e.target.value)} />
+        <CoverPicker value={image} onChange={setImage} onBusyChange={setUploading} />
+        <Button size="sm" type="submit" disabled={uploading} loading={action.busy}>บันทึกรูปและชื่อ</Button>
+      </form>}
+      {confirm && <div className="space-y-2"><p className="text-sm">ลบหมวด “{category.name}” ออกจากหน้าร้าน? หมวดต้องไม่มีสินค้าพร้อมขายหรือหมวดย่อย</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={action.busy} onClick={() => void action.run(async () => { await api('/admin/categories/edit', { id: category.id, remove: true }); await reload() })}>ยืนยันลบหมวดหมู่</Button><Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>ยกเลิก</Button></div></div>}
+      {action.error && <p role="alert" className="text-danger">{action.error}</p>}
+    </div>}
+  </Card>
 }

@@ -86,6 +86,12 @@ export function migrateCommerce(db) {
       CREATE UNIQUE INDEX category_sibling_name ON categories(COALESCE(parent_id,''),name COLLATE NOCASE);
       COMMIT;`)
   }
+  if (!db.prepare('PRAGMA table_info(listings)').all().some(column => column.name === 'hidden')) db.exec('ALTER TABLE listings ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0')
+  for (const column of ['image TEXT', 'deleted INTEGER NOT NULL DEFAULT 0']) {
+    const name = column.split(' ')[0]
+    if (!db.prepare('PRAGMA table_info(categories)').all().some(item => item.name === name)) db.exec('ALTER TABLE categories ADD COLUMN ' + column)
+  }
+  db.exec("DROP INDEX IF EXISTS category_sibling_name; CREATE UNIQUE INDEX category_sibling_name ON categories(COALESCE(parent_id,''),name COLLATE NOCASE) WHERE deleted=0;")
   for (const map of MAPS) db.prepare('INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)').run(map.id, map.name)
 }
 
@@ -295,7 +301,7 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     requireAdmin(user)
     const text = (value, max = 5000) => typeof value === 'string' && value.trim().length > 0 && value.length <= max
     if (
-      typeof input.mapId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=?').get(input.mapId) ||
+      typeof input.mapId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=? AND deleted=0').get(input.mapId) ||
       !text(input.title, 200) ||
       !text(input.description) ||
       !text(input.transferTerms) ||
@@ -380,13 +386,49 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     return transaction(() => {
       const name = input.name.trim()
       const parentId = input.parentId ?? null
-      if (parentId !== null && (typeof parentId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=?').get(parentId))) throw new PaymentError('invalid-category')
-      const existing = db.prepare('SELECT id,name,parent_id AS parentId FROM categories WHERE name=? AND parent_id IS ?').get(name, parentId)
+      if (parentId !== null && (typeof parentId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=? AND deleted=0').get(parentId))) throw new PaymentError('invalid-category')
+      const existing = db.prepare('SELECT id,name,parent_id AS parentId FROM categories WHERE name=? AND parent_id IS ? AND deleted=0').get(name, parentId)
       if (existing) return existing
+      const image = input.image || null
+      if (image && (typeof image !== 'string' || image.length > 2048 || !(/^https:\/\//.test(image) || /^\/api\/media\/[a-f0-9-]{36}\.webp$/.test(image)))) throw new PaymentError('invalid-image')
       const id = randomUUID()
-      db.prepare('INSERT INTO categories VALUES (?,?,?)').run(id, name, parentId)
+      db.prepare('INSERT INTO categories (id,name,parent_id,image) VALUES (?,?,?,?)').run(id, name, parentId, image)
       audit(user.id, 'category-created', id)
       return { id, name, parentId }
+    })
+  }
+  const editCategory = (user, input) => {
+    requireAdmin(user)
+    return transaction(() => {
+      const row = db.prepare('SELECT * FROM categories WHERE id=? AND deleted=0').get(input.id ?? '')
+      if (!row) throw new PaymentError('not-found', 404)
+      if (input.remove === true) {
+        if (db.prepare('SELECT id FROM categories WHERE parent_id=? AND deleted=0').get(row.id) ||
+            db.prepare("SELECT id FROM listings WHERE map_id=? AND status IN ('available','reserved')").get(row.id)) throw new PaymentError('category-not-empty', 409)
+        db.prepare('UPDATE categories SET deleted=1 WHERE id=?').run(row.id)
+        audit(user.id, 'category-removed', row.id)
+        return { ok: true }
+      }
+      if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 80) throw new PaymentError('invalid-category')
+      const image = input.image || null
+      if (image && (typeof image !== 'string' || image.length > 2048 || !(/^https:\/\//.test(image) || /^\/api\/media\/[a-f0-9-]{36}\.webp$/.test(image)))) throw new PaymentError('invalid-image')
+      if (db.prepare('SELECT id FROM categories WHERE name=? AND parent_id IS ? AND id!=? AND deleted=0').get(input.name.trim(), row.parent_id, row.id)) throw new PaymentError('category-name-exists', 409)
+      db.prepare('UPDATE categories SET name=?,image=? WHERE id=?').run(input.name.trim(), image, row.id)
+      audit(user.id, 'category-updated', row.id)
+      return { ok: true }
+    })
+  }
+  const removeProduct = (user, input) => {
+    requireAdmin(user)
+    return transaction(() => {
+      const row = db.prepare('SELECT * FROM listings WHERE id=?').get(input.id ?? '')
+      if (!row) throw new PaymentError('not-found', 404)
+      const group = row.group_id ?? row.id
+      if (db.prepare("SELECT id FROM listings WHERE COALESCE(group_id,id)=? AND status='reserved'").get(group)) throw new PaymentError('product-reserved', 409)
+      db.prepare("UPDATE listings SET status='archived' WHERE COALESCE(group_id,id)=? AND status='available'").run(group)
+      db.prepare('UPDATE listings SET hidden=1 WHERE COALESCE(group_id,id)=?').run(group)
+      audit(user.id, 'product-removed', group)
+      return { ok: true }
     })
   }
   const saveSettings = (user, input) => {
@@ -547,9 +589,9 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     sweep()
     return {
       serverTime: now(),
-      maps: db.prepare('SELECT id,name,parent_id AS parentId FROM categories ORDER BY rowid').all(),
+      maps: db.prepare('SELECT id,name,parent_id AS parentId,image FROM categories WHERE deleted=0 ORDER BY rowid').all(),
       listings: db
-        .prepare("SELECT * FROM listings WHERE status!='archived' ORDER BY created_at DESC")
+        .prepare("SELECT * FROM listings WHERE status!='archived' AND hidden=0 ORDER BY created_at DESC")
         .all()
         .map(publicListing),
       settings: settings(),
@@ -569,6 +611,8 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     saveListing,
     saveBatch,
     saveCategory,
+    editCategory,
+    removeProduct,
     archiveListing,
     saveSettings,
     account,

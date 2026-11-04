@@ -120,6 +120,11 @@ export function createApi({ db, receive, origin, enabled, oauthOptions = {}, com
         if (!input || typeof input !== 'object' || Array.isArray(input)) throw new PaymentError('invalid-input')
         return send(200, commerce.saveBatch(user, req.headers['idempotency-key'], input))
       }
+      if (req.method === 'POST' && ['/api/admin/categories/edit', '/api/admin/products/remove'].includes(path)) {
+        const input = await body(req)
+        if (!input || typeof input !== 'object') throw new PaymentError('invalid-input')
+        return send(200, path.endsWith('/edit') ? commerce.editCategory(user, input) : commerce.removeProduct(user, input))
+      }
       if (req.method === 'POST' && path === '/api/admin/categories') {
         const input = await body(req)
         return send(200, commerce.saveCategory(user, input ?? {}))

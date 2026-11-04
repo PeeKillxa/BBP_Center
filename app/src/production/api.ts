@@ -16,7 +16,7 @@ export type ShopSettings = { open: boolean; contactUrl: string; terms: string; f
 export type Quote = { diamonds: number; priceSatang: number; estimateSeconds: number }
 export type Catalog = {
   serverTime: number
-  maps: { id: string; name: string; parentId?: string | null }[]
+  maps: { id: string; name: string; parentId?: string | null; image?: string | null }[]
   listings: Listing[]
   settings: ShopSettings
   reservationTerms: string
@@ -63,6 +63,9 @@ export type AdminData = {
 }
 
 const MESSAGES: Record<string, string> = {
+  'category-not-empty': 'ลบหมวดย่อยและนำสินค้าพร้อมขายออกก่อน หมวดนี้ยังมีข้อมูลอยู่',
+  'product-reserved': 'สินค้าชุดนี้มีบัญชีที่ถูกจองอยู่ จึงยังลบไม่ได้',
+  'category-name-exists': 'มีชื่อหมวดนี้อยู่แล้วในหมวดแม่เดียวกัน',
   'duplicate-stock': 'มีข้อมูลบัญชีนี้ในสินค้าชุดเดิมแล้ว กรุณาตรวจไอดีก่อนเพิ่ม',
   'invalid-image': 'ใช้รูป JPG, PNG หรือ WebP ที่สมบูรณ์ ขนาดไม่เกิน 5 MB (ไม่รองรับภาพเคลื่อนไหว)',
   'invalid-stock': 'ใส่ข้อมูลส่งมอบ 1–100 บัญชี ไม่เว้นว่างและไม่ซ้ำกัน',

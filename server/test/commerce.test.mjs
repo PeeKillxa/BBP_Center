@@ -216,3 +216,29 @@ test('nested categories scope names by parent and preserve them across restart',
     assert.equal(restarted.catalog().maps.find(map => map.id === child.id).parentId, 'anime-adventures')
   } finally { f.close() }
 })
+
+
+test('category covers and deletion protect children, reservations and completed delivery', () => {
+  const f = fixture()
+  try {
+    const parent = f.shop.saveCategory(f.owner, {name:'Parent',image:'https://example.invalid/cover.webp'})
+    const child = f.shop.saveCategory(f.owner, {name:'Child',parentId:parent.id})
+    assert.equal(f.shop.catalog().maps.find(m=>m.id===parent.id).image,'https://example.invalid/cover.webp')
+    assert.throws(()=>f.shop.editCategory(f.a,{id:child.id,remove:true}),{code:'forbidden'})
+    assert.throws(()=>f.shop.editCategory(f.owner,{id:parent.id,remove:true}),{code:'category-not-empty'})
+    f.shop.editCategory(f.owner,{id:child.id,name:'Updated',image:'https://example.invalid/new.webp'})
+    assert.equal(f.shop.catalog().maps.find(m=>m.id===child.id).name,'Updated')
+    f.shop.editCategory(f.owner,{id:child.id,remove:true})
+    assert.ok(!f.shop.catalog().maps.some(m=>m.id===child.id))
+    const replacement=f.shop.saveCategory(f.owner,{name:'Updated',parentId:parent.id})
+    assert.notEqual(replacement.id,child.id)
+    f.open(); f.fund(f.a,50000)
+    const id=f.listing()
+    f.shop.reserve(f.a,'delete-res',{listingId:id,priceSatang:10000,accepted:true})
+    assert.throws(()=>f.shop.removeProduct(f.owner,{id}),{code:'product-reserved'})
+    const order=f.shop.settle(f.a,'delete-settle',{reservationId:f.shop.account(f.a).reservations[0].id})
+    f.shop.removeProduct(f.owner,{id})
+    assert.ok(!f.shop.catalog().listings.some(item=>item.id===id))
+    assert.equal(f.shop.delivery(f.a,order.id).delivery,'SENSITIVE-FIXTURE-DELIVERY')
+  } finally { f.close() }
+})
