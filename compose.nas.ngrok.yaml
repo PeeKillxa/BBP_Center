@@ -1,0 +1,25 @@
+name: bbp-center-public
+services:
+  tunnel:
+    # ngrok 3.39.13, verified on the NAS before pinning this image.
+    image: ngrok/ngrok@sha256:ff3b5c3674432d14a786349908b7bdf28ee56c25662637afcbe7180d471993ef
+    container_name: bbp-center-ngrok
+    restart: unless-stopped
+    env_file: ./deploy/ngrok/.env
+    command: ["http", "http://web:3001", "--config", "/etc/ngrok.yml", "--inspect=false", "--log=stdout", "--log-format=json"]
+    volumes:
+      - ./deploy/ngrok/ngrok.yml:/etc/ngrok.yml:ro
+    networks: [shop]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 256m
+    cpus: 1
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+networks:
+  shop:
+    external: true
+    name: bbp-center_default

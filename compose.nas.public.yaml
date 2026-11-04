@@ -1,0 +1,10 @@
+# Apply with compose.nas.https.yaml only after PUBLIC_ORIGIN is known.
+services:
+  web:
+    environment:
+      APP_ORIGIN: "${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN in deploy/ngrok/.env first}"
+  https:
+    environment:
+      PUBLIC_ORIGIN: "${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN in deploy/ngrok/.env first}"
+    volumes:
+      - ./deploy/https/Caddyfile.public:/etc/caddy/Caddyfile:ro

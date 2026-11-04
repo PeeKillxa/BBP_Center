@@ -1,0 +1,7 @@
+version: 3
+agent:
+  web_addr: false
+  inspect_db_size: -1
+  remote_management: false
+  update_check: false
+  console_ui: false

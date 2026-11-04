@@ -107,3 +107,7 @@ Discord: https://bbpcenter.duckdns.org/api/auth/oauth/discord/callback
 Google Authorized JavaScript origin (ถ้ามีช่องนี้): `https://bbpcenter.duckdns.org` คง localhost callback เดิมไว้ได้ การใส่ client credentials ทำให้ปุ่มเปิดได้ แต่ยังต้องให้เจ้าของบัญชีตั้ง callback และยืนยันการล็อกอินจริง
 
 ถ้า DNS ชี้ IP ภายใน NAS ชื่อนี้จะใช้ได้เฉพาะอุปกรณ์ที่เข้าถึง LAN นั้น หากต้องให้ลูกค้าภายนอกเข้า ต้องเปลี่ยนไปใช้เส้นทางสาธารณะที่ใช้งานได้ก่อน ไม่ใช้ Quick Tunnel เป็น URL ถาวรของร้าน
+
+## เตรียม public tunnel
+
+เตรียมไฟล์ ngrok และตรวจ config บน NAS แล้ว แต่ยังรอ authtoken ของเจ้าของ จึงยังใช้ LAN origin ตามเดิม รายละเอียด ชื่อฟรี/โควตา การย้าย OAuth callbacks และทางกลับอยู่ที่ [PUBLIC_ACCESS.md](PUBLIC_ACCESS.md) การเตรียมนี้ไม่ได้เปิดพอร์ตหรือเปลี่ยน Cloudflare Tunnel ของระบบฟาร์ม
