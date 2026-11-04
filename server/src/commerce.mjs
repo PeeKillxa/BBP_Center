@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes, randomUUID } from 'node:crypto'
+import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from 'node:crypto'
 import { PaymentError, wallet } from './payments.mjs'
 
 export const MAPS = [
@@ -36,6 +36,8 @@ export function quoteFarm(diamonds) {
 
 export function migrateCommerce(db) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS categories (id TEXT PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE);
+    CREATE TABLE IF NOT EXISTS media (id TEXT PRIMARY KEY, data BLOB NOT NULL, created_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS shop_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS listings (
       id TEXT PRIMARY KEY, map_id TEXT NOT NULL, title TEXT NOT NULL, price_satang INTEGER NOT NULL CHECK(price_satang>0),
@@ -73,6 +75,9 @@ export function migrateCommerce(db) {
     CREATE TRIGGER IF NOT EXISTS commerce_ledger_no_update BEFORE UPDATE ON commerce_ledger BEGIN SELECT RAISE(ABORT,'immutable ledger'); END;
     CREATE TRIGGER IF NOT EXISTS commerce_ledger_no_delete BEFORE DELETE ON commerce_ledger BEGIN SELECT RAISE(ABORT,'immutable ledger'); END;
   `)
+  if (!db.prepare('PRAGMA table_info(listings)').all().some(column => column.name === 'group_id'))
+    db.exec('ALTER TABLE listings ADD COLUMN group_id TEXT')
+  for (const map of MAPS) db.prepare('INSERT OR IGNORE INTO categories VALUES (?,?)').run(map.id, map.name)
 }
 
 export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.now }) {
@@ -136,6 +141,7 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
   const publicListing = (row) =>
     row && {
       id: row.id,
+      groupId: row.group_id ?? row.id,
       mapId: row.map_id,
       title: row.title,
       priceSatang: row.price_satang,
@@ -276,11 +282,11 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
       movement(user.id, -quote.priceSatang, 'farm-order', id)
       return { id }
     })
-  const saveListing = (user, input) => {
+  const insertListing = (user, input, groupId = null) => {
     requireAdmin(user)
     const text = (value, max = 5000) => typeof value === 'string' && value.trim().length > 0 && value.length <= max
     if (
-      !MAPS.some((map) => map.id === input.mapId) ||
+      typeof input.mapId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=?').get(input.mapId) ||
       !text(input.title, 200) ||
       !text(input.description) ||
       !text(input.transferTerms) ||
@@ -294,6 +300,9 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
       !input.images.length ||
       input.images.length > 8 ||
       !input.images.every((image) => {
+        if (typeof image !== 'string') return false
+        const local = /^\/api\/media\/([a-f0-9-]{36})\.webp$/.exec(image)
+        if (local) return Boolean(db.prepare('SELECT id FROM media WHERE id=?').get(local[1]))
         try {
           return new URL(image).protocol === 'https:' && image.length < 2048
         } catch {
@@ -309,9 +318,9 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     )
       throw new PaymentError('invalid-listing')
     const id = randomUUID()
-    transaction(() => {
+    {
       db.prepare(
-        'INSERT INTO listings (id,map_id,title,price_satang,description,images,attributes,transfer_terms,warranty,secret,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+        'INSERT INTO listings (id,map_id,title,price_satang,description,images,attributes,transfer_terms,warranty,secret,status,created_at,group_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
       ).run(
         id,
         input.mapId,
@@ -325,10 +334,49 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
         encrypt(input.delivery),
         'available',
         now(),
+        groupId ?? id,
       )
       audit(user.id, 'listing-created', id)
-    })
+    }
     return { id }
+  }
+  const saveListing = (user, input) => transaction(() => insertListing(user, input))
+  const saveBatch = (user, key, input) => {
+    requireAdmin(user)
+    // Store only a digest of the command: account credentials must never enter the replay log.
+    const fingerprint = createHash('sha256').update(JSON.stringify(['stock', input])).digest('hex')
+    return once(user.id, key, fingerprint, () => {
+      if (!Array.isArray(input.deliveries) || !input.deliveries.length || input.deliveries.length > 100 ||
+          !input.deliveries.every(value => typeof value === 'string' && value.trim() && value.length <= 10000) ||
+          new Set(input.deliveries.map(value => value.trim())).size !== input.deliveries.length)
+        throw new PaymentError('invalid-stock')
+      let template = input, groupId = randomUUID()
+      if (input.templateId) {
+        if (typeof input.templateId !== 'string') throw new PaymentError('invalid-stock')
+        const row = db.prepare('SELECT * FROM listings WHERE id=?').get(input.templateId)
+        if (!row) throw new PaymentError('not-found', 404)
+        template = publicListing(row)
+        groupId = row.group_id ?? row.id
+        const existing = new Set(db.prepare('SELECT secret FROM listings WHERE COALESCE(group_id,id)=?').all(groupId).map(item => decrypt(item.secret).trim()))
+        if (input.deliveries.some(value => existing.has(value.trim()))) throw new PaymentError('duplicate-stock', 409)
+      }
+      const ids = input.deliveries.map(delivery => insertListing(user, { ...template, delivery }, groupId).id)
+      return { ids, count: ids.length }
+    })
+  }
+  const saveCategory = (user, input) => {
+    requireAdmin(user)
+    if (typeof input.name !== 'string' || !input.name.trim() || input.name.length > 80)
+      throw new PaymentError('invalid-category')
+    return transaction(() => {
+      const name = input.name.trim()
+      const existing = db.prepare('SELECT * FROM categories WHERE name=?').get(name)
+      if (existing) return existing
+      const id = randomUUID()
+      db.prepare('INSERT INTO categories VALUES (?,?)').run(id, name)
+      audit(user.id, 'category-created', id)
+      return { id, name }
+    })
   }
   const saveSettings = (user, input) => {
     requireAdmin(user)
@@ -488,7 +536,7 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     sweep()
     return {
       serverTime: now(),
-      maps: MAPS,
+      maps: db.prepare('SELECT * FROM categories ORDER BY rowid').all(),
       listings: db
         .prepare("SELECT * FROM listings WHERE status!='archived' ORDER BY created_at DESC")
         .all()
@@ -508,6 +556,8 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     settle,
     orderFarm,
     saveListing,
+    saveBatch,
+    saveCategory,
     archiveListing,
     saveSettings,
     account,

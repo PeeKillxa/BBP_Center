@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fortune-inc/tw-voucher": "1.1.2",
-    "jose": "6.2.15"
+    "jose": "6.2.15",
+    "sharp": "^0.35.5"
   }
 }

@@ -1,5 +1,6 @@
 export type User = { id: string; email: string; isAdmin: boolean }
 export type Listing = {
+  groupId?: string
   id: string
   mapId: string
   title: string
@@ -62,6 +63,11 @@ export type AdminData = {
 }
 
 const MESSAGES: Record<string, string> = {
+  'duplicate-stock': 'มีข้อมูลบัญชีนี้ในสินค้าชุดเดิมแล้ว กรุณาตรวจไอดีก่อนเพิ่ม',
+  'invalid-image': 'ใช้รูป JPG, PNG หรือ WebP ที่สมบูรณ์ ขนาดไม่เกิน 5 MB (ไม่รองรับภาพเคลื่อนไหว)',
+  'invalid-stock': 'ใส่ข้อมูลส่งมอบ 1–100 บัญชี ไม่เว้นว่างและไม่ซ้ำกัน',
+  'invalid-category': 'กรอกชื่อหมวดหมู่ไม่เกิน 80 ตัวอักษร',
+  'request-too-large': 'ข้อมูลมีขนาดใหญ่เกินไป กรุณาลดขนาดหรือแบ่งส่ง',
   'authentication-required': 'กรุณาเข้าสู่ระบบก่อนทำรายการ',
   forbidden: 'บัญชีนี้ไม่มีสิทธิ์เข้าถึงหลังบ้าน',
   'insufficient-balance': 'ยอดเงินไม่พอ กรุณาเติมเงินแล้วทำรายการอีกครั้ง',

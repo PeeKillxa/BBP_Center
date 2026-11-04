@@ -5,15 +5,16 @@ import { PaymentError, wallet } from './payments.mjs'
 import { createOAuth } from './oauth.mjs'
 import { digest, issueSession, sessionCookie, sessionToken, sessionUser } from './sessions.mjs'
 import { createCommerce, quoteFarm } from './commerce.mjs'
+import sharp from 'sharp'
 
 const scrypt = promisify(scryptCallback)
 
-async function body(req) {
+async function body(req, max = 65536) {
   const chunks = []
   let size = 0
   for await (const chunk of req) {
     size += chunk.length
-    if (size > 65536) throw new PaymentError('request-too-large', 413)
+    if (size > max) throw new PaymentError('request-too-large', 413)
     chunks.push(chunk)
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')) } catch { throw new PaymentError('invalid-json') }
@@ -51,6 +52,15 @@ export function createApi({ db, receive, origin, enabled, oauthOptions = {}, com
       }
       if (req.method === 'GET' && path === '/api/health') return send(200, { enabled: enabled && commerce.settings().open })
       if (req.method === 'GET' && path === '/api/catalog') return send(200, commerce.catalog())
+      const media = /^\/api\/media\/([a-f0-9-]{36})\.webp$/.exec(path)
+      if (['GET', 'HEAD'].includes(req.method) && media) {
+        const row = db.prepare('SELECT data FROM media WHERE id=?').get(media[1])
+        if (!row) return send(404, { error: 'not-found' })
+        res.setHeader('Content-Type', 'image/webp')
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+        res.writeHead(200)
+        return res.end(req.method === 'HEAD' ? undefined : row.data)
+      }
       if (req.method === 'GET' && path === '/api/farm/quote') return send(200, quoteFarm(Number(url.searchParams.get('diamonds'))))
       if (req.method === 'GET' && path === '/api/auth/providers') return send(200, oauth.status())
       const oauthRoute = /^\/api\/auth\/oauth\/(google|discord)\/(start|callback|link)$/.exec(path)
@@ -87,6 +97,33 @@ export function createApi({ db, receive, origin, enabled, oauthOptions = {}, com
         user: user ? { ...user, isAdmin: commerce.isAdmin(user) } : null, providers: user ? db.prepare('SELECT provider FROM identities WHERE user_id=?').all(user.id).map(row => row.provider) : [],
       })
       if (!user) throw new PaymentError('authentication-required', 401)
+      if (path.startsWith('/api/admin/') && !commerce.isAdmin(user)) throw new PaymentError('forbidden', 403)
+      if (req.method === 'POST' && path === '/api/admin/images') {
+        const input = await body(req, 7 * 1024 * 1024)
+        if (typeof input?.data !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(input.data))
+          throw new PaymentError('invalid-image')
+        const bytes = Buffer.from(input.data, 'base64')
+        if (!bytes.length || bytes.length > 5 * 1024 * 1024) throw new PaymentError('invalid-image')
+        let data
+        try {
+          const image = sharp(bytes, { limitInputPixels: 40000000, failOn: 'warning' })
+          const meta = await image.metadata()
+          if (!['jpeg', 'png', 'webp'].includes(meta.format) || (meta.pages ?? 1) > 1) throw new Error()
+          data = await image.rotate().resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true }).webp({ quality: 85 }).toBuffer()
+        } catch { throw new PaymentError('invalid-image') }
+        const id = randomUUID()
+        db.prepare('INSERT INTO media VALUES (?,?,?)').run(id, data, Date.now())
+        return send(200, { url: `/api/media/${id}.webp` })
+      }
+      if (req.method === 'POST' && path === '/api/admin/stock') {
+        const input = await body(req, 2 * 1024 * 1024)
+        if (!input || typeof input !== 'object' || Array.isArray(input)) throw new PaymentError('invalid-input')
+        return send(200, commerce.saveBatch(user, req.headers['idempotency-key'], input))
+      }
+      if (req.method === 'POST' && path === '/api/admin/categories') {
+        const input = await body(req)
+        return send(200, commerce.saveCategory(user, input ?? {}))
+      }
       if (req.method === 'GET' && path === '/api/wallet') return send(200, { user, ...wallet(db, user.id) })
       if (req.method === 'GET' && path === '/api/account') return send(200, commerce.account(user))
       const delivery = /^\/api\/orders\/([A-Za-z0-9-]+)\/delivery$/.exec(path)

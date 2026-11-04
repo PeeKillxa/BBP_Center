@@ -164,3 +164,39 @@ test('HTTP endpoints ignore browser-supplied roles and never expose another cust
     assert.ok(!JSON.stringify(await (await request('/api/catalog')).json()).includes('SENSITIVE-FIXTURE'))
   } finally { await new Promise(resolve => server.close(resolve)); f.close() }
 })
+
+
+test('custom categories and bulk stock are atomic, replay-safe and keep each delivery private', () => {
+  const f = fixture()
+  try {
+    const category = f.shop.saveCategory(f.owner, { name: 'ไอดีไก่ตัน' })
+    assert.equal(f.shop.saveCategory(f.owner, { name: 'ไอดีไก่ตัน' }).id, category.id)
+    assert.ok(f.shop.catalog().maps.some(item => item.id === category.id))
+    assert.throws(() => f.shop.saveCategory(f.a, { name: 'No' }), { code: 'forbidden' })
+    const templateId = f.listing()
+    const template = f.shop.catalog().listings.find(item => item.id === templateId)
+    const input = { ...template, mapId: category.id, deliveries: ['private-one:password-1', 'private-two:password-2'] }
+    const result = f.shop.saveBatch(f.owner, 'batch-001', input)
+    assert.deepEqual(f.shop.saveBatch(f.owner, 'batch-001', input), result)
+    assert.equal(result.count, 2)
+    const rows = f.shop.catalog().listings.filter(item => result.ids.includes(item.id))
+    assert.equal(rows[0].groupId, rows[1].groupId)
+    assert.throws(() => f.shop.saveBatch(f.a, 'batch-bad', input), { code: 'forbidden' })
+    assert.throws(() => f.shop.saveBatch(f.owner, 'batch-001', { ...input, title: 'Changed' }), { code: 'idempotency-conflict' })
+    assert.throws(() => f.shop.saveBatch(f.owner, 'batch-002', { ...input, deliveries: ['one', 'one'] }), { code: 'invalid-stock' })
+    assert.throws(() => f.shop.saveBatch(f.owner, 'batch-003', { ...input, deliveries: ['valid', ''] }), { code: 'invalid-stock' })
+    assert.equal(f.shop.catalog().listings.length, 3)
+    assert.ok(!JSON.stringify(f.shop.catalog()).includes('private-one'))
+    assert.ok(!JSON.stringify(f.shop.admin(f.owner)).includes('private-one'))
+    assert.ok(!JSON.stringify(f.db.prepare('SELECT * FROM commands').all()).includes('private-one'))
+    f.open(); f.fund(f.a, 50000); f.fund(f.b, 50000)
+    const orderA = f.shop.checkout(f.a, 'stock-buy-a', { listingId: result.ids[0], priceSatang: input.priceSatang })
+    f.shop.reserve(f.b, 'stock-res-b', { listingId: result.ids[1], priceSatang: input.priceSatang, accepted: true })
+    assert.equal(f.shop.delivery(f.a, orderA.id).delivery, input.deliveries[0])
+    assert.throws(() => f.shop.delivery(f.b, orderA.id), { code: 'not-found' })
+    const refill = f.shop.saveBatch(f.owner, 'batch-refill', { templateId: result.ids[0], deliveries: ['private-three:password-3'] })
+    assert.equal(f.shop.catalog().listings.find(item => item.id === refill.ids[0]).groupId, rows[0].groupId)
+    assert.throws(() => f.shop.saveBatch(f.owner, 'batch-duplicate', { templateId: result.ids[0], deliveries: input.deliveries }), { code: 'duplicate-stock' })
+    assert.equal(f.shop.catalog().listings.find(item => item.id === result.ids[1]).status, 'reserved')
+  } finally { f.close() }
+})

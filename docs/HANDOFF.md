@@ -1,5 +1,11 @@
 # BBP Center — current handoff (2026-11-04)
 
+## สินค้าและสต็อก (อัปเดตล่าสุด)
+
+เพิ่ม InventoryTools/ListingForm ใช้ร่วมในหน้าร้านและหลังบ้าน แอดมินเพิ่มหมวด อัปโหลดรูป เพิ่มสินค้าหลายบัญชี และเติมสต็อกจากการ์ดได้ ดู INVENTORY.md รูป WebP เก็บใน SQLite media บน persistent volume; server ใช้ sharp ตรวจและย่อรูป เพิ่ม categories/group_id แบบไม่ลบข้อมูลเก่า ข้อมูลบัญชีเข้ารหัสแยกเหมือนเดิม และ command fingerprint สำหรับ bulk เป็น hash เพื่อไม่บันทึกรหัสผ่านใน replay log
+
+Deploy บน NAS ด้วยชุด Compose public แล้ว สำรองก่อนเปลี่ยนที่ backups/inventory-* ตรวจ integrity, primary keys ของข้อมูลเดิม และ delivery.key ยังตรงกัน container healthy, payments enabled=true และหน้า /maps สาธารณะเปิดได้ ไม่เพิ่มข้อมูลสินค้าทดสอบในร้านจริง เก็บ image ก่อนเปลี่ยนไว้ที่ bbp-center-nas:before-inventory สำหรับ rollback ตัวแอปโดยไม่ย้อนฐานข้อมูล
+
 ระบบหน้าร้านถูกเปลี่ยนจากต้นแบบเป็น server-backed แล้ว ดู [LAUNCH.md](LAUNCH.md) สำหรับการตั้งบัญชีเจ้าของร้าน การใส่สินค้าจริง และการเปิดรับคำสั่งซื้อ
 
 ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว เว็บหลักปัจจุบัน `https://dauby-corliss-nonequatorial.ngrok-free.dev` ผ่าน ngrok บน NAS ชื่อ DuckDNS ภายใน LAN redirect มาที่ชื่อใหม่นี้ ใช้ compose.nas.https.yaml + compose.nas.public.yaml สำหรับ app/HTTPS และ compose.nas.ngrok.yaml สำหรับ tunnel ดู PUBLIC_ACCESS.md และ NAS_SETUP.md เจ้าของเปิดร้านผ่านหลังบ้านแล้ว ตรวจ /api/health enabled=true ไม่มีการรับซองจริงระหว่างติดตั้ง

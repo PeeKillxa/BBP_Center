@@ -3,6 +3,7 @@ import { Button, Card, Field, Notice, PageHeader } from '../components/ui'
 import { api, type AdminData, type FarmJob, type ShopSettings } from './api'
 import { useAction, useRemote, useShop } from './context'
 import { SignedIn } from './Account'
+import { InventoryTools } from './Inventory'
 import { formatTHB, parseBahtInput } from '../lib/money'
 
 const area = 'min-h-28 w-full rounded-xl border border-line bg-surface p-3'
@@ -24,17 +25,6 @@ function AdminAuthorized({ reloadShop }: { reloadShop: () => Promise<void> }) {
   const [settings, setSettings] = useState<ShopSettings>({ contactUrl: '', terms: '', farmTerms: '', open: false })
   const [tab, setTab] = useState('settings'),
     [message, setMessage] = useState('')
-  const [listing, setListing] = useState({
-    title: '',
-    mapId: 'anime-adventures',
-    price: '',
-    description: '',
-    images: '',
-    attributes: '',
-    transferTerms: '',
-    warranty: '',
-    delivery: '',
-  })
   useEffect(() => {
     if (data) setSettings(data.settings)
   }, [data])
@@ -45,43 +35,6 @@ function AdminAuthorized({ reloadShop }: { reloadShop: () => Promise<void> }) {
       await reload()
       await reloadShop()
       setMessage('บันทึกข้อมูลร้านแล้ว')
-    })
-  }
-  const addListing = (event: FormEvent) => {
-    event.preventDefault()
-    void action.run(async () => {
-      const priceSatang = parseBahtInput(listing.price)
-      if (priceSatang === null) throw new Error('ราคาสินค้าไม่ถูกต้อง')
-      const attributes = listing.attributes
-        .split('\n')
-        .filter((value) => value.trim())
-        .map((line) => {
-          const [label, ...rest] = line.split(':')
-          return { label: label.trim(), value: rest.join(':').trim() }
-        })
-      await api('/admin/listings', {
-        ...listing,
-        priceSatang,
-        attributes,
-        images: listing.images
-          .split('\n')
-          .map((value) => value.trim())
-          .filter(Boolean),
-      })
-      setListing({
-        title: '',
-        mapId: 'anime-adventures',
-        price: '',
-        description: '',
-        images: '',
-        attributes: '',
-        transferTerms: '',
-        warranty: '',
-        delivery: '',
-      })
-      await reload()
-      await reloadShop()
-      setMessage('เพิ่มสินค้าจริงแล้ว')
     })
   }
   return (
@@ -162,64 +115,13 @@ function AdminAuthorized({ reloadShop }: { reloadShop: () => Promise<void> }) {
       )}
       {tab === 'listings' && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="p-5">
-            <h2 className="mb-4 text-xl font-bold">เพิ่มไอดีเกม</h2>
-            <form onSubmit={addListing} className="space-y-4">
-              <Field
-                label="ชื่อสินค้า"
-                required
-                value={listing.title}
-                onChange={(e) => setListing({ ...listing, title: e.target.value })}
-              />
-              <label className="block">
-                หมวดเกม
-                <select
-                  className="h-11 w-full rounded-xl border border-line bg-surface px-3"
-                  value={listing.mapId}
-                  onChange={(e) => setListing({ ...listing, mapId: e.target.value })}
-                >
-                  <option value="anime-adventures">Anime Adventures</option>
-                  <option value="anime-vanguards">Anime Vanguards</option>
-                </select>
-              </label>
-              <Field
-                label="ราคา (บาท)"
-                required
-                inputMode="decimal"
-                value={listing.price}
-                onChange={(e) => setListing({ ...listing, price: e.target.value })}
-              />
-              {(
-                [
-                  ['description', 'รายละเอียดสินค้า'],
-                  ['images', 'ลิงก์ภาพ HTTPS หนึ่งลิงก์ต่อบรรทัด'],
-                  ['attributes', 'คุณสมบัติ หนึ่งรายการต่อบรรทัด รูปแบบ ชื่อ:ค่า'],
-                  ['transferTerms', 'เงื่อนไขการโอน'],
-                  ['warranty', 'เงื่อนไขการรับประกัน'],
-                  ['delivery', 'ข้อมูลส่งมอบ (เปิดเฉพาะผู้ซื้อที่ชำระครบ)'],
-                ] as const
-              ).map(([key, label]) => (
-                <label className="block space-y-2" key={key}>
-                  {label}
-                  <textarea
-                    className={area}
-                    required={key !== 'attributes'}
-                    autoComplete="off"
-                    value={listing[key]}
-                    onChange={(e) => setListing({ ...listing, [key]: e.target.value })}
-                  />
-                </label>
-              ))}
-              <Button type="submit" loading={action.busy}>
-                เพิ่มสินค้า 1 บัญชี
-              </Button>
-            </form>
-          </Card>
+          <InventoryTools onSaved={reload} />
           <div className="space-y-3">
             {!data?.listings.length && <Notice>ยังไม่มีสินค้า เพิ่มข้อมูลและภาพจริงทางแบบฟอร์ม</Notice>}
             {data?.listings.map((item) => (
               <Card key={item.id} className="space-y-2 p-4">
                 <h2 className="font-bold">{item.title}</h2>
+                <InventoryTools template={item} onSaved={reload} />
                 <p>
                   {formatTHB(item.priceSatang)} ·{' '}
                   {

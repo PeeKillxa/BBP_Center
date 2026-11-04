@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Gem, Sprout, PackageOpen } from 'lucide-react'
 import { Button, ButtonLink, Card, EmptyState, Notice, PageHeader, Field, Badge } from '../components/ui'
@@ -8,9 +8,10 @@ import { formatDurationTH } from '../lib/time'
 import { idempotencyKey } from '../lib/idempotency'
 import { api, type Listing, type Quote } from './api'
 import { useAction, useShop } from './context'
+import { InventoryTools, groupListings } from './Inventory'
 
 const statusText: Record<string, string> = { available: 'พร้อมขาย', reserved: 'จองแล้ว', sold: 'ขายแล้ว' }
-export function ListingCard({ listing }: { listing: Listing }) {
+export function ListingCard({ listing }: { listing: Listing & { stock?: number } }) {
   return (
     <Card as="article" lift className="overflow-hidden">
       <Link to={`/listing/${listing.id}`}>
@@ -18,9 +19,11 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <div className="space-y-2 p-4">
           <Badge tone={listing.status === 'available' ? 'success' : 'neutral'}>{statusText[listing.status]}</Badge>
           <h3 className="font-bold">{listing.title}</h3>
+          {listing.stock !== undefined && <p className="text-sm text-muted">เหลือ {listing.stock} บัญชี</p>}
           <p className="text-lg font-bold text-accent">{formatTHB(listing.priceSatang)}</p>
         </div>
       </Link>
+      <div className="px-4"><InventoryTools template={listing} /></div>
     </Card>
   )
 }
@@ -47,6 +50,7 @@ export function Home() {
       </section>
       <section>
         <h2 className="mb-6 text-2xl font-bold">หมวดหมู่เกม</h2>
+        <InventoryTools />
         <div className="grid gap-4 sm:grid-cols-2">
           {catalog?.maps.map((map) => (
             <Card key={map.id} lift className="p-6">
@@ -64,11 +68,11 @@ export function Home() {
       <section>
         <h2 className="mb-6 text-2xl font-bold">ไอดีพร้อมขาย</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {catalog?.listings
+          {groupListings(catalog?.listings ?? [])
             .filter((item) => item.status === 'available')
             .slice(0, 4)
             .map((item) => (
-              <ListingCard key={item.id} listing={item} />
+              <ListingCard key={item.groupId ?? item.id} listing={item} />
             ))}
         </div>
         {catalog && !catalog.listings.some((item) => item.status === 'available') && (
@@ -99,7 +103,7 @@ export function Maps() {
     [sort, setSort] = useState('new'),
     [max, setMax] = useState('')
   const title = catalog?.maps.find((map) => map.id === mapId)?.name ?? 'ไอดีทุกเกม'
-  const listings = [...(catalog?.listings ?? [])]
+  const listings = groupListings(catalog?.listings ?? [])
     .filter(
       (item) =>
         (!mapId || mapId === 'all' || item.mapId === mapId) &&
@@ -113,6 +117,7 @@ export function Maps() {
   return (
     <>
       <PageHeader title={title} />
+      <InventoryTools mapId={mapId} />
       <div className="mb-5 flex flex-wrap gap-3">
         <Link to="/maps" className="text-accent">
           ทั้งหมด
@@ -159,7 +164,7 @@ export function Maps() {
       ) : listings.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {listings.map((item) => (
-            <ListingCard key={item.id} listing={item} />
+            <ListingCard key={item.groupId ?? item.id} listing={item} />
           ))}
         </div>
       ) : (
@@ -173,11 +178,13 @@ export function ListingDetail() {
     { catalog, session, reload, loading } = useShop(),
     nav = useNavigate(),
     action = useAction()
-  const listing = catalog?.listings.find((item) => item.id === id)
+  const original = catalog?.listings.find((item) => item.id === id)
+  const siblings = catalog?.listings.filter(item => (item.groupId ?? item.id) === (original?.groupId ?? original?.id)) ?? []
+  const listing = siblings.find(item => item.status === 'available') ?? original
   const [accepted, setAccepted] = useState(false),
     [image, setImage] = useState(0)
-  const buyKey = useRef(idempotencyKey()),
-    reserveKey = useRef(idempotencyKey())
+  const buyKey = useMemo(() => idempotencyKey(), [listing?.id]),
+    reserveKey = useMemo(() => idempotencyKey(), [listing?.id])
   if (loading) return <p role="status">กำลังโหลดสินค้า…</p>
   if (!listing) return <PageHeader title="ไม่พบสินค้านี้" />
   const submit = (reserve: boolean) =>
@@ -185,7 +192,7 @@ export function ListingDetail() {
       const result = await api<{ id: string }>(
         reserve ? '/reservations' : '/purchase',
         { listingId: listing.id, priceSatang: listing.priceSatang, accepted },
-        reserve ? reserveKey.current : buyKey.current,
+        reserve ? reserveKey : buyKey,
       )
       await reload()
       nav(reserve ? `/account/reservations/${result.id}` : `/account/orders/${result.id}`)
@@ -193,6 +200,8 @@ export function ListingDetail() {
   return (
     <>
       <PageHeader title={listing.title} />
+      <InventoryTools template={listing} />
+      <p className="mb-4 text-muted">เหลือ {siblings.filter(item => item.status === 'available').length} บัญชี</p>
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
           <img
