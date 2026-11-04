@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Button } from './ui'
 
-const PROVIDERS = [{ id: 'google', name: 'Google' }, { id: 'discord', name: 'Discord' }] as const
+const PROVIDERS = [
+  { id: 'google', name: 'Google', logo: '/brand/oauth/google.png' },
+  { id: 'discord', name: 'Discord', logo: '/brand/oauth/discord.svg' },
+] as const
 
 /** A full navigation begins server-side OAuth; no provider token is handled in the browser. */
 export function OAuthButtons({ link = false, linked = [] }: { link?: boolean; linked?: string[] }) {
@@ -37,6 +40,7 @@ export function OAuthButtons({ link = false, linked = [] }: { link?: boolean; li
       const isLinked = linked.includes(provider.id)
       return <div key={provider.id}>
         <Button type="button" variant="secondary" className="w-full" loading={busy === provider.id}
+          icon={<img src={provider.logo} alt="" aria-hidden="true" width={20} height={20} className="size-5 shrink-0 object-contain" />}
           disabled={loading || !available[provider.id] || Boolean(busy) || (link && isLinked)}
           onClick={() => void start(provider.id)} aria-describedby={`oauth-${provider.id}-hint`}>
           {link ? isLinked ? `เชื่อม ${provider.name} แล้ว` : `เชื่อมบัญชี ${provider.name}` : `ดำเนินการต่อด้วย ${provider.name}`}

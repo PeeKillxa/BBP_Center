@@ -41,3 +41,11 @@ DB และ `delivery.key` เป็นข้อมูลจริง ห้า
 ## เปิดจากภายนอก
 
 ngrok public endpoint เชื่อมแล้วและ canonical origin เปลี่ยนตาม PUBLIC_ACCESS.md สำรองก่อนเปลี่ยนอยู่ใน backups/before-public-* ตรวจ records/key/private config เดิมยังอยู่ครบ เจ้าของเพิ่ม callbacks ทั้งสองแล้ว ตรวจ Google authorization ถึงหน้า Sign in โดยไม่มี redirect_uri_mismatch และเจ้าของยืนยันเห็นเว็บสาธารณะแล้ว ยังไม่อ้างว่าได้ session จริงบน public domain จากทุก provider ไม่ย้อนกลับไปใช้ Compose LAN อย่างเดียวโดยไม่ตั้งใจ
+
+## โลโก้ปุ่มเข้าสู่ระบบ (ยังไม่ deploy)
+
+เพิ่มโลโก้ Google/Discord จากไฟล์ทางการที่เก็บใน app/public/brand/oauth และใช้ icon prop ของ Button เดิมใน OAuthButtons ครอบคลุมทั้ง login/register และเชื่อมบัญชี spinner ยังแทนที่โลโก้ตอนเริ่ม OAuth ภาพเป็น decorative และรักษาสัดส่วน
+
+Frontend tests 13 กรณี, production build และ 21st review ผ่าน ตรวจพรีวิวในเครื่องแล้ว แต่ยังไม่ขึ้น NAS: SSH root ด้วยข้อมูลที่เคยใช้ถูกปฏิเสธสองครั้ง และ SMB อ่าน source ได้แต่เขียนโฟลเดอร์ assets ไม่ได้ จึงไม่เปลี่ยน runtime/ข้อมูลจริง รอเจ้าของแจ้งว่ามีการเปลี่ยนรหัสหรือปิด root SSH หรือไม่
+
+หลังได้สิทธิ์ deploy ให้ใช้ compose.nas.https.yaml ร่วม compose.nas.public.yaml และโหลด deploy/ngrok/.env เสมอ อย่าใช้ Compose LAN เพียงชุดเดียว การแก้นี้ไม่ต้องเปลี่ยน .env, DB, callback หรือ tunnel
