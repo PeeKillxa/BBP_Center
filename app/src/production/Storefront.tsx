@@ -13,9 +13,9 @@ import { InventoryTools, groupListings, categoryPath, CategoryCard } from './Inv
 const statusText: Record<string, string> = { available: 'พร้อมขาย', reserved: 'จองแล้ว', sold: 'ขายแล้ว' }
 export function ListingCard({ listing }: { listing: Listing & { stock?: number } }) {
   return (
-    <Card as="article" lift className="overflow-hidden">
-      <Link to={`/listing/${listing.id}`}>
-        <img src={listing.images[0]} alt={listing.title} className="aspect-video w-full object-cover" loading="lazy" />
+    <Card as="article" lift className="self-start overflow-hidden">
+      <Link className="block" to={`/listing/${listing.id}`}>
+        <img src={listing.images[0]} alt={listing.title} className="aspect-video w-full bg-surface-2 object-contain" loading="lazy" />
         <div className="space-y-2 p-4">
           <Badge tone={listing.status === 'available' ? 'success' : 'neutral'}>{statusText[listing.status]}</Badge>
           <h3 className="font-bold">{listing.title}</h3>
@@ -23,7 +23,7 @@ export function ListingCard({ listing }: { listing: Listing & { stock?: number }
           <p className="text-lg font-bold text-accent">{formatTHB(listing.priceSatang)}</p>
         </div>
       </Link>
-      <div className="px-4"><InventoryTools template={listing} /></div>
+      <div className="px-4 pb-3"><InventoryTools template={listing} /></div>
     </Card>
   )
 }
@@ -196,7 +196,7 @@ export function ListingDetail() {
           <img
             src={listing.images[image] ?? listing.images[0]}
             alt={listing.title}
-            className="aspect-video w-full rounded-2xl object-cover"
+            className="aspect-video w-full rounded-2xl bg-surface-2 object-contain"
           />
           <div className="mt-3 flex gap-2 overflow-x-auto">
             {listing.images.map((src, i) => (
@@ -207,7 +207,7 @@ export function ListingDetail() {
                 aria-pressed={image === i}
                 className="shrink-0 rounded-lg border border-line"
               >
-                <img src={src} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                <img src={src} alt="" className="h-16 w-24 rounded-lg bg-surface-2 object-contain" />
               </button>
             ))}
           </div>

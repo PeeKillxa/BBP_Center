@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
-import { Plus, Upload } from 'lucide-react'
+import { Plus, Upload, Trash2 } from 'lucide-react'
 import { Button, Card, Field } from '../components/ui'
 import { api, type Listing } from './api'
 import { useAction, useShop } from './context'
@@ -24,13 +24,14 @@ export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; t
     await reload()
     await onSaved?.()
   }
-  return <section className="my-5 space-y-3" aria-label="จัดการสินค้าสำหรับแอดมิน">
-    <div className="flex flex-wrap gap-2">
+  return <section className={template ? "border-t border-line pt-3 pb-1" : "my-5 space-y-3"} aria-label="จัดการสินค้าสำหรับแอดมิน">
+    <div className="flex flex-wrap items-center gap-2">
       {!template && <Button variant="secondary" size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'category'} onClick={() => { setPanel(panel === 'category' ? null : 'category'); setMessage('') }}>{mapId && mapId !== 'all' ? 'เพิ่มหมวดหมู่ย่อย' : 'เพิ่มหมวดหมู่'}</Button>}
       <Button size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'listing'} onClick={() => { setPanel(panel === 'listing' ? null : 'listing'); setMessage('') }}>{template ? 'เติมสต็อก' : 'เพิ่มสินค้า / ไอดี'}</Button>
+      {template && template.status !== 'archived' && !confirmRemove && <Button size="sm" variant="ghost" className="ml-auto text-danger" icon={<Trash2 size={16} aria-hidden />} onClick={() => setConfirmRemove(true)}>ลบ</Button>}
     </div>
     {template && template.status !== 'archived' && <div className="space-y-2">
-      {!confirmRemove ? <Button size="sm" variant="ghost" onClick={() => setConfirmRemove(true)}>ลบสินค้า</Button> : <>
+      {!confirmRemove ? null : <>
         <p className="text-sm">นำสต็อกพร้อมขายทั้งหมดของ “{template.title}” ออกจากหน้าร้าน?</p>
         <div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={category.busy} onClick={() => void category.run(async () => { await api('/admin/products/remove', { id: template.id }); setConfirmRemove(false); await reload(); await onSaved?.() })}>ยืนยันลบสินค้า</Button><Button size="sm" variant="ghost" onClick={() => setConfirmRemove(false)}>ยกเลิก</Button></div>
       </>}
@@ -146,7 +147,7 @@ export function CoverPicker({ value, onChange, onBusyChange }: { value: string; 
   const upload = useAction()
   useEffect(() => { onBusyChange?.(upload.busy) }, [upload.busy, onBusyChange])
   return <div className="space-y-2">
-    {value && <img src={value} alt="ตัวอย่างรูปปกหมวดหมู่" className="aspect-video w-full rounded-xl object-cover" />}
+    {value && <img src={value} alt="ตัวอย่างรูปปกหมวดหมู่" className="aspect-video w-full rounded-xl bg-surface-2 object-contain" />}
     <label className="block space-y-2 text-sm">รูปปกหมวดหมู่
       <input type="file" disabled={upload.busy} accept="image/jpeg,image/png,image/webp" className="block w-full" onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ''
@@ -172,13 +173,13 @@ export function CategoryCard({ category }: { category: { id: string; name: strin
   const [uploading, setUploading] = useState(false)
   const products = catalog?.listings.filter(item => categoryPath(catalog.maps, item.mapId).some(map => map.id === category.id)) ?? []
   const cover = category.image || products.find(item => item.images.length)?.images[0] || '/brand/bbp-center-logo.png'
-  return <Card className="overflow-hidden">
+  return <Card className="self-start overflow-hidden">
     <Link to={`/maps/${category.id}`}>
-      <img src={cover} alt={category.name} loading="lazy" className="aspect-video w-full object-cover" />
+      <img src={cover} alt={category.name} loading="lazy" className="aspect-video w-full bg-surface-2 object-contain" />
       <div className="space-y-2 p-4"><h3 className="text-xl font-bold">{category.name}</h3><p className="text-sm text-accent">{products.filter(item => item.status === 'available').length} บัญชีพร้อมขาย →</p></div>
     </Link>
-    {session.user?.isAdmin && <div className="space-y-3 px-4 pb-4">
-      <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" onClick={() => { setEditing(!editing); setConfirm(false) }}>แก้ไข / รูปปก</Button><Button size="sm" variant="ghost" onClick={() => { setConfirm(!confirm); setEditing(false) }}>ลบหมวดหมู่</Button></div>
+    {session.user?.isAdmin && <div className="space-y-3 border-t border-line px-4 py-3">
+      <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" onClick={() => { setEditing(!editing); setConfirm(false) }}>แก้ไข / รูปปก</Button><Button size="sm" variant="ghost" className="ml-auto text-danger" icon={<Trash2 size={16} aria-hidden />} onClick={() => { setConfirm(!confirm); setEditing(false) }}>ลบ</Button></div>
       {editing && <form className="space-y-3" onSubmit={event => { event.preventDefault(); void action.run(async () => { await api('/admin/categories/edit', { id: category.id, name, image }); setEditing(false); await reload() }) }}>
         <Field label="ชื่อหมวดหมู่" required maxLength={80} value={name} onChange={e => setName(e.target.value)} />
         <CoverPicker value={image} onChange={setImage} onBusyChange={setUploading} />
