@@ -200,3 +200,19 @@ test('custom categories and bulk stock are atomic, replay-safe and keep each del
     assert.equal(f.shop.catalog().listings.find(item => item.id === result.ids[1]).status, 'reserved')
   } finally { f.close() }
 })
+
+
+test('nested categories scope names by parent and preserve them across restart', () => {
+  const f = fixture()
+  try {
+    const child = f.shop.saveCategory(f.owner, { name: 'ไก่ตัน', parentId: 'anime-adventures' })
+    const other = f.shop.saveCategory(f.owner, { name: 'ไก่ตัน', parentId: 'anime-vanguards' })
+    assert.notEqual(child.id, other.id)
+    assert.equal(f.shop.saveCategory(f.owner, { name: 'ไก่ตัน', parentId: 'anime-adventures' }).id, child.id)
+    assert.throws(() => f.shop.saveCategory(f.owner, { name: 'Bad', parentId: 'missing' }), { code: 'invalid-category' })
+    const nested = f.shop.saveCategory(f.owner, { name: 'ระดับสูง', parentId: child.id })
+    const restarted = createCommerce({ db: f.db, encryptionKey: f.key, adminIds: ['owner'] })
+    assert.equal(restarted.catalog().maps.find(map => map.id === nested.id).parentId, child.id)
+    assert.equal(restarted.catalog().maps.find(map => map.id === child.id).parentId, 'anime-adventures')
+  } finally { f.close() }
+})

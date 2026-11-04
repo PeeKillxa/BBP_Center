@@ -16,7 +16,7 @@ export type ShopSettings = { open: boolean; contactUrl: string; terms: string; f
 export type Quote = { diamonds: number; priceSatang: number; estimateSeconds: number }
 export type Catalog = {
   serverTime: number
-  maps: { id: string; name: string }[]
+  maps: { id: string; name: string; parentId?: string | null }[]
   listings: Listing[]
   settings: ShopSettings
   reservationTerms: string

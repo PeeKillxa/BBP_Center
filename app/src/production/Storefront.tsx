@@ -8,7 +8,7 @@ import { formatDurationTH } from '../lib/time'
 import { idempotencyKey } from '../lib/idempotency'
 import { api, type Listing, type Quote } from './api'
 import { useAction, useShop } from './context'
-import { InventoryTools, groupListings } from './Inventory'
+import { InventoryTools, groupListings, categoryPath } from './Inventory'
 
 const statusText: Record<string, string> = { available: 'พร้อมขาย', reserved: 'จองแล้ว', sold: 'ขายแล้ว' }
 export function ListingCard({ listing }: { listing: Listing & { stock?: number } }) {
@@ -52,12 +52,12 @@ export function Home() {
         <h2 className="mb-6 text-2xl font-bold">หมวดหมู่เกม</h2>
         <InventoryTools />
         <div className="grid gap-4 sm:grid-cols-2">
-          {catalog?.maps.map((map) => (
+          {catalog?.maps.filter(map => !map.parentId).map((map) => (
             <Card key={map.id} lift className="p-6">
               <Link to={`/maps/${map.id}`}>
                 <h3 className="text-xl font-bold">{map.name}</h3>
                 <p className="mt-2 text-accent">
-                  {catalog.listings.filter((item) => item.mapId === map.id && item.status === 'available').length}{' '}
+                  {catalog.listings.filter((item) => categoryPath(catalog.maps, item.mapId).some(category => category.id === map.id) && item.status === 'available').length}{' '}
                   รายการพร้อมขาย →
                 </p>
               </Link>
@@ -106,7 +106,7 @@ export function Maps() {
   const listings = groupListings(catalog?.listings ?? [])
     .filter(
       (item) =>
-        (!mapId || mapId === 'all' || item.mapId === mapId) &&
+        (!mapId || mapId === 'all' || categoryPath(catalog?.maps ?? [], item.mapId).some(map => map.id === mapId)) &&
         (status === 'all' || item.status === status) &&
         item.title.toLowerCase().includes(query.toLowerCase()) &&
         (!max || item.priceSatang <= Number(max) * 100),
@@ -117,12 +117,16 @@ export function Maps() {
   return (
     <>
       <PageHeader title={title} />
-      <InventoryTools mapId={mapId} />
+      <nav aria-label="เส้นทางหมวดหมู่" className="mb-4 flex flex-wrap gap-2 text-accent">
+        <Link to="/maps">หมวดหมู่ทั้งหมด</Link>
+        {categoryPath(catalog?.maps ?? [], mapId).map(map => <span key={map.id}> / <Link to={`/maps/${map.id}`}>{map.name}</Link></span>)}
+      </nav>
+      <InventoryTools key={mapId ?? 'root'} mapId={mapId} />
       <div className="mb-5 flex flex-wrap gap-3">
         <Link to="/maps" className="text-accent">
           ทั้งหมด
         </Link>
-        {catalog?.maps.map((map) => (
+        {catalog?.maps.filter(map => (map.parentId ?? null) === (mapId && mapId !== 'all' ? mapId : null)).map((map) => (
           <Link key={map.id} to={`/maps/${map.id}`} className="text-accent">
             {map.name}
           </Link>

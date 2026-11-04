@@ -77,7 +77,16 @@ export function migrateCommerce(db) {
   `)
   if (!db.prepare('PRAGMA table_info(listings)').all().some(column => column.name === 'group_id'))
     db.exec('ALTER TABLE listings ADD COLUMN group_id TEXT')
-  for (const map of MAPS) db.prepare('INSERT OR IGNORE INTO categories VALUES (?,?)').run(map.id, map.name)
+  if (!db.prepare('PRAGMA table_info(categories)').all().some(column => column.name === 'parent_id')) {
+    db.exec(`BEGIN IMMEDIATE;
+      CREATE TABLE categories_tree (id TEXT PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE, parent_id TEXT);
+      INSERT INTO categories_tree (id,name) SELECT id,name FROM categories;
+      DROP TABLE categories;
+      ALTER TABLE categories_tree RENAME TO categories;
+      CREATE UNIQUE INDEX category_sibling_name ON categories(COALESCE(parent_id,''),name COLLATE NOCASE);
+      COMMIT;`)
+  }
+  for (const map of MAPS) db.prepare('INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)').run(map.id, map.name)
 }
 
 export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.now }) {
@@ -370,12 +379,14 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
       throw new PaymentError('invalid-category')
     return transaction(() => {
       const name = input.name.trim()
-      const existing = db.prepare('SELECT * FROM categories WHERE name=?').get(name)
+      const parentId = input.parentId ?? null
+      if (parentId !== null && (typeof parentId !== 'string' || !db.prepare('SELECT id FROM categories WHERE id=?').get(parentId))) throw new PaymentError('invalid-category')
+      const existing = db.prepare('SELECT id,name,parent_id AS parentId FROM categories WHERE name=? AND parent_id IS ?').get(name, parentId)
       if (existing) return existing
       const id = randomUUID()
-      db.prepare('INSERT INTO categories VALUES (?,?)').run(id, name)
+      db.prepare('INSERT INTO categories VALUES (?,?,?)').run(id, name, parentId)
       audit(user.id, 'category-created', id)
-      return { id, name }
+      return { id, name, parentId }
     })
   }
   const saveSettings = (user, input) => {
@@ -536,7 +547,7 @@ export function createCommerce({ db, encryptionKey, adminIds = [], now = Date.no
     sweep()
     return {
       serverTime: now(),
-      maps: db.prepare('SELECT * FROM categories ORDER BY rowid').all(),
+      maps: db.prepare('SELECT id,name,parent_id AS parentId FROM categories ORDER BY rowid').all(),
       listings: db
         .prepare("SELECT * FROM listings WHERE status!='archived' ORDER BY created_at DESC")
         .all()

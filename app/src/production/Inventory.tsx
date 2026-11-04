@@ -9,7 +9,7 @@ import { idempotencyKey } from '../lib/idempotency'
 const area = 'min-h-28 w-full rounded-xl border border-line bg-surface p-3'
 
 export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; template?: Listing; onSaved?: () => Promise<void> }) {
-  const { session, reload } = useShop()
+  const { session, reload, catalog } = useShop()
   const [panel, setPanel] = useState<'category' | 'listing' | null>(null)
   const [name, setName] = useState(''), [message, setMessage] = useState('')
   const category = useAction()
@@ -22,12 +22,13 @@ export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; t
   }
   return <section className="my-5 space-y-3" aria-label="จัดการสินค้าสำหรับแอดมิน">
     <div className="flex flex-wrap gap-2">
-      {!template && <Button variant="secondary" size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'category'} onClick={() => { setPanel(panel === 'category' ? null : 'category'); setMessage('') }}>เพิ่มหมวดหมู่</Button>}
+      {!template && <Button variant="secondary" size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'category'} onClick={() => { setPanel(panel === 'category' ? null : 'category'); setMessage('') }}>{mapId && mapId !== 'all' ? 'เพิ่มหมวดหมู่ย่อย' : 'เพิ่มหมวดหมู่'}</Button>}
       <Button size="sm" icon={<Plus size={16} aria-hidden />} aria-expanded={panel === 'listing'} onClick={() => { setPanel(panel === 'listing' ? null : 'listing'); setMessage('') }}>{template ? 'เติมสต็อก' : 'เพิ่มสินค้า / ไอดี'}</Button>
     </div>
     {message && <p role="status" className="text-success">{message}</p>}
     {panel === 'category' && <Card className="max-w-xl p-5">
-      <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void category.run(async () => { await api('/admin/categories', { name }); setName(''); setPanel(null); setMessage('เพิ่มหมวดหมู่แล้ว'); await reload() }) }}>
+      <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void category.run(async () => { await api('/admin/categories', { name, parentId: mapId && mapId !== 'all' ? mapId : null }); setName(''); setPanel(null); setMessage('เพิ่มหมวดหมู่แล้ว'); await reload() }) }}>
+        <p className="text-sm text-muted">เพิ่มใน: {catalog?.maps.find(map => map.id === mapId)?.name ?? 'หมวดหมู่หลัก'}</p>
         <Field label="ชื่อหมวดหมู่" required maxLength={80} value={name} onChange={e => setName(e.target.value)} />
         <div className="flex gap-2"><Button type="submit" loading={category.busy}>บันทึกหมวดหมู่</Button><Button type="button" variant="ghost" disabled={category.busy} onClick={() => setPanel(null)}>ยกเลิก</Button></div>
         {category.error && <p role="alert" className="text-danger">{category.error}</p>}
@@ -71,7 +72,7 @@ export function ListingForm({ mapId, template, onSaved, onCancel }: { mapId?: st
       {!template && <>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ชื่อสินค้า" required maxLength={200} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} />
-          <label className="space-y-2">หมวดหมู่<select aria-label="หมวดหมู่" required className="h-11 w-full rounded-xl border border-line bg-surface px-3" value={draft.mapId} onChange={e => setDraft({ ...draft, mapId: e.target.value })}>{catalog?.maps.map(map => <option key={map.id} value={map.id}>{map.name}</option>)}</select></label>
+          <label className="space-y-2">หมวดหมู่<select aria-label="หมวดหมู่" required className="h-11 w-full rounded-xl border border-line bg-surface px-3" value={draft.mapId} onChange={e => setDraft({ ...draft, mapId: e.target.value })}>{catalog?.maps.map(map => <option key={map.id} value={map.id}>{categoryPath(catalog?.maps ?? [], map.id).map(item => item.name).join(' / ')}</option>)}</select></label>
           <Field label="ราคา / บัญชี (บาท)" required inputMode="decimal" value={draft.price} onChange={e => setDraft({ ...draft, price: e.target.value })} />
         </div>
         <div className="space-y-3 rounded-xl border border-line p-4">
@@ -115,4 +116,16 @@ export function groupListings(listings: Listing[]) {
     groups.set(key, { ...(current && (priority[current.status] ?? 0) >= (priority[listing.status] ?? 0) ? current : listing), stock })
   }
   return [...groups.values()]
+}
+
+export function categoryPath(maps: { id: string; name: string; parentId?: string | null }[], id?: string) {
+  const path = [], seen = new Set<string>()
+  let current = maps.find(map => map.id === id)
+  while (current && !seen.has(current.id)) {
+    path.unshift(current)
+    seen.add(current.id)
+    const parentId = current.parentId
+    current = maps.find(map => map.id === parentId)
+  }
+  return path
 }
