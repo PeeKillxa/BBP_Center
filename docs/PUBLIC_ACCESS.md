@@ -2,9 +2,13 @@
 
 ## สถานะวันที่ 2026-11-04
 
-เจ้าของขอเปิดให้คนนอกเครือข่ายเข้าเว็บและยังต้องการใช้ชื่อฟรี เตรียม ngrok บน NAS แล้ว: image 3.39.13 ถูก pin ด้วย digest, ตรวจ ngrok config, Compose ทั้งสองชุด และ Caddy public redirect ผ่านแล้ว **ยังไม่ได้เริ่ม tunnel หรือเปลี่ยน origin จริง** เพราะรอเจ้าของตั้ง authtoken ของบัญชี ngrok ใน `deploy/ngrok/.env`
+เปิด public endpoint บน NAS แล้วที่ `https://dauby-corliss-nonequatorial.ngrok-free.dev` ใช้ ngrok 3.39.13 ที่ pin digest และ restart อัตโนมัติ APP_ORIGIN เปลี่ยนเป็นชื่อนี้แล้ว DuckDNS/พอร์ต 3080 ภายใน LAN redirect ไปชื่อใหม่
 
-เว็บเดิม `https://bbpcenter.duckdns.org` ยังเป็น LAN ตามเดิม ไฟล์ `.env` ของ Windows, ฐานข้อมูล NAS, เบอร์รับซอง, สิทธิ์เจ้าของร้าน และเว็บฟาร์ม/Cloudflare Tunnel เดิมไม่ถูกเปลี่ยนจากการเตรียมนี้
+ตรวจผ่าน public HTTPS URL: หน้าเว็บ/API 200, API หลังบ้านที่ไม่มี session 401, Google/Discord start ใช้ callback ของชื่อใหม่ พร้อม PKCE S256 และ Secure flow cookie ตรวจ records/key/private config เดิมยังอยู่ครบ และ SQLite integrity ผ่าน ระบบฟาร์มกับ Cloudflare Tunnel เดิมยังรันตามเดิม
+
+เจ้าของยืนยันเพิ่ม callback ใหม่ใน Google/Discord แล้ว ตรวจ Google authorization อีกครั้งถึงหน้า Sign in โดยไม่มี redirect_uri_mismatch ตรวจ POST ของ origin จริงผ่านไปถึงการตรวจ input และ origin อื่นได้ 403 ยังไม่รายงานว่าได้ session จริงจากทุก provider บน public domain จนทดสอบล็อกอินจบ เบราว์เซอร์ครั้งแรกมี ngrok Visit Site interstitial ซึ่งผู้ใช้กดเองแล้วและยืนยันเห็นหน้า BBP Center
+
+เจ้าของบันทึกข้อมูลร้านและเปิดร้านผ่านหลังบ้านแล้วก่อนย้าย origin ตรวจ /api/health enabled=true ค่าตั้งเหล่านี้ถูกคงไว้ ไม่มีการรับซองหรือเปลี่ยนยอดเงินระหว่างติดตั้ง สำรองก่อนเปลี่ยนอยู่ที่ `backups/before-public-*` รวม DB/key/ค่าตั้งเดิมและไฟล์ ngrok.env อ่านได้เฉพาะ root
 
 ## ชื่อเว็บและข้อจำกัด
 
@@ -16,7 +20,7 @@ ngrok Free ให้ dev domain ผูกกับบัญชีหนึ่ง
 
 เจ้าของสมัคร/เข้า [ngrok Dashboard](https://dashboard.ngrok.com/signup) และนำ Your Authtoken ที่มีอยู่ใส่ในไฟล์ local `deploy/ngrok/.env` ตาม `.env.example` ไม่ส่ง token ลงแชตหรือ Git
 
-คัดลอกไฟล์นี้ไป `deploy/ngrok/.env` บน NAS ผ่านช่องทางที่ปลอดภัย และตั้งเจ้าของ root กับ mode 600 token นี้ใช้เฉพาะ container tunnel ไม่ใส่ใน frontend หรือ server/.env
+คัดลอกไฟล์นี้ไป `deploy/ngrok/.env` บน NAS ผ่านช่องทางที่ปลอดภัย และตั้งเจ้าของ root กับ mode 600 token นี้ใช้เฉพาะ container tunnel ไม่ใส่ใน frontend หรือ server/.env image ทางการเขียน auth-config.yml ใน tmpfs /var/lib/ngrok ที่ owner UID 1000/GID 100, mode 0700 โดย root filesystem ยังคง read-only
 
 ## 2. เริ่ม tunnel และอ่านชื่อจริง
 
@@ -61,7 +65,7 @@ Discord: PUBLIC_ORIGIN/api/auth/oauth/discord/callback
 
 Google Authorized JavaScript origin ถ้ามีช่องนี้ ใช้ PUBLIC_ORIGIN การสร้าง tunnel ไม่ได้เพิ่ม callback ใน provider ให้อัตโนมัติ ต้องทดสอบ login จน `/api/auth/session` ได้บัญชีจริงด้วย
 
-ตรวจผ่านอินเทอร์เน็ตภายนอก: หน้าเว็บและ assets, `/api/auth/providers`, flow cookie Secure/HttpOnly, callback origin, API หลังบ้านที่ไม่มี session ต้อง 401 และ TrueMoney ต้องยังเป็นปิดรับจริงจนเจ้าของตั้งข้อมูลร้าน/เปิดร้านเอง ไม่มีการกดรับซองจริงในการติดตั้ง
+ตรวจผ่านอินเทอร์เน็ตภายนอก: หน้าเว็บและ assets, `/api/auth/providers`, flow cookie Secure/HttpOnly, callback origin, API หลังบ้านที่ไม่มี session ต้อง 401 และ TrueMoney ต้องสะท้อนการตั้งค่าร้านของเจ้าของ ไม่มีการกดรับซองจริงในการติดตั้ง
 
 ## กลับไปใช้ LAN
 

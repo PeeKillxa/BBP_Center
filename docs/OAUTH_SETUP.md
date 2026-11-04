@@ -4,14 +4,16 @@
 
 ## NAS ที่ใช้อยู่ตอนนี้
 
-เข้า `https://bbpcenter.duckdns.org/login` ภายใน LAN ค่า credentials เดิมถูกตั้งบน NAS แล้วและ backend ส่ง callback ชื่อ HTTPS นี้:
+เว็บหลักปัจจุบันคือ `https://dauby-corliss-nonequatorial.ngrok-free.dev/login` ชื่อ DuckDNS ภายใน LAN redirect ไปชื่อนี้แล้ว ต้องเพิ่ม callback ใหม่ใน client เดิมทั้งสอง provider โดยเก็บ localhost/LAN URLs เดิมไว้ได้:
 
 ```text
-Google:  https://bbpcenter.duckdns.org/api/auth/oauth/google/callback
-Discord: https://bbpcenter.duckdns.org/api/auth/oauth/discord/callback
+Google:  https://dauby-corliss-nonequatorial.ngrok-free.dev/api/auth/oauth/google/callback
+Discord: https://dauby-corliss-nonequatorial.ngrok-free.dev/api/auth/oauth/discord/callback
 ```
 
-เพิ่ม Google URL ใน Authorized redirect URIs ของ Web application client เดิม ส่วน Discord เพิ่มใน OAuth2 → Redirects ของ application เดิม ไม่ต้องสร้าง client/secret ใหม่ หากมีช่อง JavaScript origins ของ Google ให้เพิ่ม `https://bbpcenter.duckdns.org` ด้วย
+เพิ่ม Google URL ใน Authorized redirect URIs ของ Web application client เดิม ส่วน Discord เพิ่มใน OAuth2 → Redirects ของ application เดิม ไม่ต้องสร้าง client/secret ใหม่ หากมีช่อง JavaScript origins ของ Google ให้เพิ่ม `https://dauby-corliss-nonequatorial.ngrok-free.dev` ด้วย
+
+หลังย้าย public domain เจ้าของยืนยันเพิ่ม callback ใหม่ทั้งสองแล้ว ตรวจ Google authorization ถึงหน้า Sign in โดยไม่มี redirect_uri_mismatch ยังไม่อ้างว่าทดสอบ session จริงจากทุก provider บนชื่อใหม่ครบ การเปลี่ยน APP_ORIGIN ไม่แก้รายการ redirect ใน provider ให้อัตโนมัติ
 
 เจ้าของยืนยันเพิ่ม HTTPS callback แล้ววันที่ 2026-11-04 และยืนยันว่า Google ล็อกอินได้หลายบัญชี ตรวจฐานข้อมูล NAS พบ Google และ Discord identities แล้ว กรณีอีเมลเดิมที่สร้างบัญชีผ่าน Discord ต้องเข้าบัญชีเดิมและเชื่อม Google ก่อน ไม่รวมกระเป๋าเงินอัตโนมัติจากอีเมล
 

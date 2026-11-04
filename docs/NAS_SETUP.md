@@ -8,12 +8,12 @@
 
 ## สถานะใช้งานวันที่ 2026-11-04
 
-- เว็บหลัก: `https://bbpcenter.duckdns.org` ใช้ได้เฉพาะอุปกรณ์ที่เข้าถึงวง LAN ของ NAS
+- เว็บหลักปัจจุบัน: `https://dauby-corliss-nonequatorial.ngrok-free.dev` ผ่าน ngrok บน NAS ดู PUBLIC_ACCESS.md
 - DuckDNS ชี้ A record ไป `10.1.251.3` ตามตัวเลือกของเจ้าของ ใบรับรอง HTTPS จริงตรวจสอบได้โดยไม่ต้องข้ามคำเตือนเบราว์เซอร์ Caddy ต่ออายุผ่าน DNS challenge
-- ใช้ `compose.nas.https.yaml` เป็นชุดที่กำลังรัน พอร์ต 3080 redirect ไป HTTPS แล้ว ไม่ใช้ HTTP compose อีกชุดพร้อมกัน
-- Backend ใช้ NODE_ENV=production และเปิดเฉพาะใน Docker คัดลอก Google/Discord credentials เดิมมาไว้ใน server/.env แล้ว แต่ยังต้องตั้ง callback ใน provider ให้ตรงชื่อใหม่
-- เจ้าของยืนยันเพิ่ม HTTPS callback แล้ว และ Google สำเร็จหนึ่งบัญชีตามรายงาน/Google identity บน NAS ยังต้องตรวจบัญชีอื่นและ Discord จริง
-- เจ้าของสั่งเปิดเติมเงิน: ตั้ง TRUEMONEY_ENABLED=true แล้วและตรวจเบอร์เดิมผ่าน แต่ shop_settings ยังว่าง เจ้าของจะกรอก contactUrl/terms เองภายหลังผ่าน /owner แล้วเปิดร้านก่อนรับซอง หน้า /api/health ยัง enabled=false ไม่มีการรับซองจริงในรอบนี้
+- ใช้ compose.nas.https.yaml ร่วมกับ compose.nas.public.yaml สำหรับ app/HTTPS โหลด deploy/ngrok/.env ด้วย ngrok รันแยกผ่าน compose.nas.ngrok.yaml ชื่อ DuckDNS/พอร์ต 3080 ภายใน LAN redirect ไป public URL
+- Backend ใช้ NODE_ENV=production และ APP_ORIGIN เป็น public URL ข้างต้น Google/Discord start ส่ง callback ชื่อใหม่แล้ว ต้องเพิ่ม callback นี้ใน provider อีกครั้ง
+- เจ้าของเพิ่ม callback ของ public domain ใน Google/Discord แล้ว ตรวจ Google ถึงหน้า Sign in โดยไม่มี redirect_uri_mismatch เจ้าของกด Visit Site และยืนยันเห็นเว็บสาธารณะแล้ว ยังไม่อ้างว่าทดสอบ session จริงจากทุก provider บนชื่อใหม่ครบ
+- เจ้าของตั้งข้อมูลร้าน/เปิดรับรายการผ่านหลังบ้านเองแล้ว /api/health enabled=true TrueMoney backend ยังคง enabled ตามเดิม ไม่มีการรับซองจริงระหว่าง deploy
 - คงเว็บฟาร์มพอร์ต 3000 และ Cloudflare Tunnel เดิมไว้
 
 สำรองก่อนเปลี่ยน HTTPS อยู่ใน `backups/before-https-*` รวม DB, delivery key, ค่าตั้งเดิมและ DNS เดิม ไฟล์ลับและ TLS data ไม่อยู่ใน Git
@@ -108,6 +108,6 @@ Google Authorized JavaScript origin (ถ้ามีช่องนี้): `htt
 
 ถ้า DNS ชี้ IP ภายใน NAS ชื่อนี้จะใช้ได้เฉพาะอุปกรณ์ที่เข้าถึง LAN นั้น หากต้องให้ลูกค้าภายนอกเข้า ต้องเปลี่ยนไปใช้เส้นทางสาธารณะที่ใช้งานได้ก่อน ไม่ใช้ Quick Tunnel เป็น URL ถาวรของร้าน
 
-## เตรียม public tunnel
+## Public tunnel ที่ใช้งานอยู่
 
-เตรียมไฟล์ ngrok และตรวจ config บน NAS แล้ว แต่ยังรอ authtoken ของเจ้าของ จึงยังใช้ LAN origin ตามเดิม รายละเอียด ชื่อฟรี/โควตา การย้าย OAuth callbacks และทางกลับอยู่ที่ [PUBLIC_ACCESS.md](PUBLIC_ACCESS.md) การเตรียมนี้ไม่ได้เปิดพอร์ตหรือเปลี่ยน Cloudflare Tunnel ของระบบฟาร์ม
+ngrok public endpoint และ canonical origin ใช้งานจริงแล้ว สำรองก่อนเปลี่ยนอยู่ที่ backups/before-public-* ตรวจ records/key/private config และ integrity ผ่าน รายละเอียดชื่อฟรี/โควตา วิธี restart ด้วย Compose ชุดที่ถูกต้อง การเพิ่ม OAuth callbacks และทางกลับอยู่ใน [PUBLIC_ACCESS.md](PUBLIC_ACCESS.md) ไม่ได้เปิด inbound port หรือเปลี่ยน Cloudflare Tunnel ของระบบฟาร์ม

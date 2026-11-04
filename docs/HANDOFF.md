@@ -2,7 +2,7 @@
 
 ระบบหน้าร้านถูกเปลี่ยนจากต้นแบบเป็น server-backed แล้ว ดู [LAUNCH.md](LAUNCH.md) สำหรับการตั้งบัญชีเจ้าของร้าน การใส่สินค้าจริง และการเปิดรับคำสั่งซื้อ
 
-ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว ใช้ `compose.nas.https.yaml` และ `https://bbpcenter.duckdns.org` โดย DNS ชี้ IP ภายในตามที่เจ้าของเลือก จึงใช้ได้เฉพาะ LAN ใบรับรองผ่านการตรวจจริง, Google/Discord credentials อยู่บน NAS แล้ว และตั้ง TRUEMONEY_ENABLED=true แล้ว แต่ยังรับเงินไม่ได้จนกว่าจะมี contactUrl/terms และเปิดร้าน ดู [NAS_SETUP.md](NAS_SETUP.md) และ [OAUTH_SETUP.md](OAUTH_SETUP.md)
+ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว เว็บหลักปัจจุบัน `https://dauby-corliss-nonequatorial.ngrok-free.dev` ผ่าน ngrok บน NAS ชื่อ DuckDNS ภายใน LAN redirect มาที่ชื่อใหม่นี้ ใช้ compose.nas.https.yaml + compose.nas.public.yaml สำหรับ app/HTTPS และ compose.nas.ngrok.yaml สำหรับ tunnel ดู PUBLIC_ACCESS.md และ NAS_SETUP.md เจ้าของเปิดร้านผ่านหลังบ้านแล้ว ตรวจ /api/health enabled=true ไม่มีการรับซองจริงระหว่างติดตั้ง
 
 เจ้าของเพิ่ม HTTPS callback แล้วและยืนยัน Google เข้าได้หลายบัญชี บัญชีอีเมลเดิมที่มี Discord identity ต้องเข้าผ่าน Discord ก่อนแล้วเชื่อม Google ที่ /account/profile ไม่รวมบัญชีด้วยอีเมลอัตโนมัติ หน้า wallet แสดง oauth_error ก่อน session gate แล้ว
 
@@ -36,8 +36,8 @@ DB และ `delivery.key` เป็นข้อมูลจริง ห้า
 
 ## ระบบเติมเงินวันที่ 2026-11-04
 
-เจ้าของสั่งเปิดเติมเงินจริงแล้ว เปิด TRUEMONEY_ENABLED บน NAS โดยคงเบอร์เดิมที่ผ่านการตรวจรูปแบบไว้ สำรอง DB/key/server.env ที่ backups/before-payments-* ก่อนเปลี่ยน ยังไม่ได้รับซองจริง และ shop_settings ยังว่าง จึงคง gate ปิดร้าน/รับเงินไว้ เจ้าของให้เว้นการกรอกลิงก์ติดต่อ/เงื่อนไขไว้ก่อนและจะกรอกเองผ่าน /owner ภายหลัง ไม่แต่งนโยบายให้เองหรือข้าม gate เจ้าของเลือกบัญชีแอดมินอย่างชัดเจนแล้ว ตั้งสิทธิ์บน NAS โดยเก็บ admin IDs เดิมไว้
+เจ้าของสั่งเปิดเติมเงินจริงแล้ว เปิด TRUEMONEY_ENABLED บน NAS โดยคงเบอร์เดิมที่ผ่านการตรวจรูปแบบไว้ สำรอง DB/key/server.env ที่ backups/before-payments-* ก่อนเปลี่ยน ต่อมาเจ้าของกรอกข้อมูลร้านและเปิดรับรายการผ่าน /owner เอง จึงคงค่าเปิดไว้ ไม่มีการรับซองจริงระหว่างติดตั้ง เจ้าของเลือกบัญชีแอดมินอย่างชัดเจนแล้ว ตั้งสิทธิ์บน NAS โดยเก็บ admin IDs เดิมไว้
 
-## เตรียมเปิดจากภายนอก
+## เปิดจากภายนอก
 
-เจ้าของขอให้คนนอกเข้าได้แล้ว เตรียม ngrok แบบ free stable dev domain บน NAS พร้อม Compose override สำหรับ canonical origin และ LAN redirect ตรวจ config ผ่าน แต่ยังไม่เริ่ม tunnel/เปลี่ยน origin เพราะรอบัญชี ngrok/authtoken ดู PUBLIC_ACCESS.md อย่ารายงานว่าเว็บเข้าจากอินเทอร์เน็ตได้ก่อนเชื่อมและตรวจจริง
+ngrok public endpoint เชื่อมแล้วและ canonical origin เปลี่ยนตาม PUBLIC_ACCESS.md สำรองก่อนเปลี่ยนอยู่ใน backups/before-public-* ตรวจ records/key/private config เดิมยังอยู่ครบ เจ้าของเพิ่ม callbacks ทั้งสองแล้ว ตรวจ Google authorization ถึงหน้า Sign in โดยไม่มี redirect_uri_mismatch และเจ้าของยืนยันเห็นเว็บสาธารณะแล้ว ยังไม่อ้างว่าได้ session จริงบน public domain จากทุก provider ไม่ย้อนกลับไปใช้ Compose LAN อย่างเดียวโดยไม่ตั้งใจ

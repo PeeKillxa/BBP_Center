@@ -6,12 +6,17 @@ services:
     container_name: bbp-center-ngrok
     restart: unless-stopped
     env_file: ./deploy/ngrok/.env
-    command: ["http", "http://web:3001", "--config", "/etc/ngrok.yml", "--inspect=false", "--log=stdout", "--log-format=json"]
+    environment:
+      NGROK_CONFIG: /etc/ngrok.yml
+    command: ["http", "http://web:3001", "--inspect=false", "--log=stdout", "--log-format=json"]
     volumes:
       - ./deploy/ngrok/ngrok.yml:/etc/ngrok.yml:ro
     networks: [shop]
     read_only: true
-    tmpfs: ["/tmp:size=32m,mode=1777"]
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      # The official entrypoint generates auth-config.yml here as uid 1000.
+      - /var/lib/ngrok:size=1m,mode=0700,uid=1000,gid=100
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     mem_limit: 256m
