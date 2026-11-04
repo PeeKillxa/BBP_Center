@@ -13,7 +13,7 @@ Discord: https://bbpcenter.duckdns.org/api/auth/oauth/discord/callback
 
 เพิ่ม Google URL ใน Authorized redirect URIs ของ Web application client เดิม ส่วน Discord เพิ่มใน OAuth2 → Redirects ของ application เดิม ไม่ต้องสร้าง client/secret ใหม่ หากมีช่อง JavaScript origins ของ Google ให้เพิ่ม `https://bbpcenter.duckdns.org` ด้วย
 
-เจ้าของยืนยันเพิ่ม HTTPS callback แล้ววันที่ 2026-11-04 และรายงานว่า Google ล็อกอินสำเร็จหนึ่งบัญชี ตรวจฐานข้อมูล NAS พบ Google identity หนึ่งรายการ แต่ยังต้องตรวจการเข้าใช้ด้วยบัญชีอื่นและ Discord จนได้ session จริง
+เจ้าของยืนยันเพิ่ม HTTPS callback แล้ววันที่ 2026-11-04 และยืนยันว่า Google ล็อกอินได้หลายบัญชี ตรวจฐานข้อมูล NAS พบ Google และ Discord identities แล้ว กรณีอีเมลเดิมที่สร้างบัญชีผ่าน Discord ต้องเข้าบัญชีเดิมและเชื่อม Google ก่อน ไม่รวมกระเป๋าเงินอัตโนมัติจากอีเมล
 
 คำแนะนำ localhost ด้านล่างใช้สำหรับพัฒนาบนเครื่อง Windows และสามารถคง URI เดิมไว้ควบคู่กันได้
 
@@ -77,7 +77,7 @@ DISCORD_CLIENT_SECRET=
 
 Server tests 21 กรณี และ frontend 13 กรณีผ่าน พร้อม type/build ผ่าน ทดสอบ provider token exchange/profile ด้วย mock HTTP และทดสอบลายเซ็น Google ด้วย RSA key ที่สร้างใน test
 
-NAS มี credentials และ HTTPS แล้ว ตรวจ redirect เริ่มต้นของทั้งสอง provider ได้และ flow cookie เป็น Secure/HttpOnly การเข้าสู่ระบบจนได้ session จริงยังต้องทดสอบหลังตั้ง callback ใน provider โดยเจ้าของบัญชี
+NAS มี credentials และ HTTPS แล้ว ตรวจ redirect เริ่มต้นของทั้งสอง provider ได้และ flow cookie เป็น Secure/HttpOnly เจ้าของยืนยัน Google ใช้งานได้หลายบัญชีและตรวจพบ identities ของทั้งสอง provider บน NAS
 
 ตรวจ Chromium ที่ `/login` แล้ว: ปุ่ม Google/Discord ปิดพร้อมเหตุผลเมื่อ credentials ว่าง และ console ไม่มี error ขณะโหลดหน้า
 

@@ -13,7 +13,7 @@
 - ใช้ `compose.nas.https.yaml` เป็นชุดที่กำลังรัน พอร์ต 3080 redirect ไป HTTPS แล้ว ไม่ใช้ HTTP compose อีกชุดพร้อมกัน
 - Backend ใช้ NODE_ENV=production และเปิดเฉพาะใน Docker คัดลอก Google/Discord credentials เดิมมาไว้ใน server/.env แล้ว แต่ยังต้องตั้ง callback ใน provider ให้ตรงชื่อใหม่
 - เจ้าของยืนยันเพิ่ม HTTPS callback แล้ว และ Google สำเร็จหนึ่งบัญชีตามรายงาน/Google identity บน NAS ยังต้องตรวจบัญชีอื่นและ Discord จริง
-- TrueMoney ยังปิดระหว่างตั้งค่า LAN ไม่มีการรับซองเงินจริงในรอบนี้
+- เจ้าของสั่งเปิดเติมเงิน: ตั้ง TRUEMONEY_ENABLED=true แล้วและตรวจเบอร์เดิมผ่าน แต่ shop_settings ยังว่าง เจ้าของจะกรอก contactUrl/terms เองภายหลังผ่าน /owner แล้วเปิดร้านก่อนรับซอง หน้า /api/health ยัง enabled=false ไม่มีการรับซองจริงในรอบนี้
 - คงเว็บฟาร์มพอร์ต 3000 และ Cloudflare Tunnel เดิมไว้
 
 สำรองก่อนเปลี่ยน HTTPS อยู่ใน `backups/before-https-*` รวม DB, delivery key, ค่าตั้งเดิมและ DNS เดิม ไฟล์ลับและ TLS data ไม่อยู่ใน Git

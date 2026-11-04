@@ -2,9 +2,9 @@
 
 ระบบหน้าร้านถูกเปลี่ยนจากต้นแบบเป็น server-backed แล้ว ดู [LAUNCH.md](LAUNCH.md) สำหรับการตั้งบัญชีเจ้าของร้าน การใส่สินค้าจริง และการเปิดรับคำสั่งซื้อ
 
-ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว ใช้ `compose.nas.https.yaml` และ `https://bbpcenter.duckdns.org` โดย DNS ชี้ IP ภายในตามที่เจ้าของเลือก จึงใช้ได้เฉพาะ LAN ใบรับรองผ่านการตรวจจริง, Google/Discord credentials อยู่บน NAS แล้ว และ TrueMoney ยังปิด ดู [NAS_SETUP.md](NAS_SETUP.md) และ [OAUTH_SETUP.md](OAUTH_SETUP.md)
+ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว ใช้ `compose.nas.https.yaml` และ `https://bbpcenter.duckdns.org` โดย DNS ชี้ IP ภายในตามที่เจ้าของเลือก จึงใช้ได้เฉพาะ LAN ใบรับรองผ่านการตรวจจริง, Google/Discord credentials อยู่บน NAS แล้ว และตั้ง TRUEMONEY_ENABLED=true แล้ว แต่ยังรับเงินไม่ได้จนกว่าจะมี contactUrl/terms และเปิดร้าน ดู [NAS_SETUP.md](NAS_SETUP.md) และ [OAUTH_SETUP.md](OAUTH_SETUP.md)
 
-เจ้าของเพิ่ม HTTPS callback แล้วและรายงาน Google สำเร็จหนึ่งบัญชี ตรวจ NAS พบ Google identity หนึ่งรายการ แต่บัญชีอื่นยังมีปัญหา แก้หน้า wallet ให้แสดง oauth_error ก่อน session gate แล้ว ไม่สรุปว่าเกิดจาก Testing เพราะ request ใช้เฉพาะ basic identity scopes ยังต้องตรวจบัญชีอื่นและ Discord จริง
+เจ้าของเพิ่ม HTTPS callback แล้วและยืนยัน Google เข้าได้หลายบัญชี บัญชีอีเมลเดิมที่มี Discord identity ต้องเข้าผ่าน Discord ก่อนแล้วเชื่อม Google ที่ /account/profile ไม่รวมบัญชีด้วยอีเมลอัตโนมัติ หน้า wallet แสดง oauth_error ก่อน session gate แล้ว
 
 ## โครงสร้าง
 
@@ -28,8 +28,12 @@ DB และ `delivery.key` เป็นข้อมูลจริง ห้า
 
 ## ขอบเขตการเปิดจริง
 
-ไม่เติมสินค้า ภาพ รีวิว หรือยอดขายให้เอง ต้องตั้ง `ADMIN_USER_IDS` และข้อมูลร้าน/เงื่อนไข จากนั้นเพิ่มสินค้าจริงผ่าน `/owner` และเปิดรับรายการ
+ไม่เติมสินค้า ภาพ รีวิว หรือยอดขายให้เอง ตั้ง ADMIN_USER_IDS บน NAS ให้บัญชีเจ้าของที่เลือกแล้ว เจ้าของแก้ข้อมูลร้าน/เงื่อนไขและเพิ่มสินค้าจริงผ่าน `/owner` ก่อนเปิดรับรายการ
 
 ยังต้องให้เจ้าของตรวจ OAuth บนโดเมนจริง ทดสอบซองจริง และตั้งโฮสต์/HTTPS/persistent disk ก่อนรับลูกค้า ไม่มีนโยบายยกเลิก/คืนเงินที่แต่งขึ้นเอง ระบบไม่คืน/หักเงินเพิ่มจากการเปลี่ยนสถานะงานฟาร์ม
 
 เอกสารใน `docs/superpowers/` ก่อนรอบเปิดจริงเป็นประวัติการพัฒนาต้นแบบ ไม่ใช่สถานะ runtime ปัจจุบัน
+
+## ระบบเติมเงินวันที่ 2026-11-04
+
+เจ้าของสั่งเปิดเติมเงินจริงแล้ว เปิด TRUEMONEY_ENABLED บน NAS โดยคงเบอร์เดิมที่ผ่านการตรวจรูปแบบไว้ สำรอง DB/key/server.env ที่ backups/before-payments-* ก่อนเปลี่ยน ยังไม่ได้รับซองจริง และ shop_settings ยังว่าง จึงคง gate ปิดร้าน/รับเงินไว้ เจ้าของให้เว้นการกรอกลิงก์ติดต่อ/เงื่อนไขไว้ก่อนและจะกรอกเองผ่าน /owner ภายหลัง ไม่แต่งนโยบายให้เองหรือข้าม gate เจ้าของเลือกบัญชีแอดมินอย่างชัดเจนแล้ว ตั้งสิทธิ์บน NAS โดยเก็บ admin IDs เดิมไว้
