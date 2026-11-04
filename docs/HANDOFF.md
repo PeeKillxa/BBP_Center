@@ -1,6 +1,10 @@
-# BBP Center — current handoff (2026-11-03)
+# BBP Center — current handoff (2026-11-04)
 
 ระบบหน้าร้านถูกเปลี่ยนจากต้นแบบเป็น server-backed แล้ว ดู [LAUNCH.md](LAUNCH.md) สำหรับการตั้งบัญชีเจ้าของร้าน การใส่สินค้าจริง และการเปิดรับคำสั่งซื้อ
+
+ติดตั้งจริงบน NAS ใน `\\nas\STUDENT\BBP_CENTER` แล้ว ใช้ `compose.nas.https.yaml` และ `https://bbpcenter.duckdns.org` โดย DNS ชี้ IP ภายในตามที่เจ้าของเลือก จึงใช้ได้เฉพาะ LAN ใบรับรองผ่านการตรวจจริง, Google/Discord credentials อยู่บน NAS แล้ว และ TrueMoney ยังปิด ดู [NAS_SETUP.md](NAS_SETUP.md) และ [OAUTH_SETUP.md](OAUTH_SETUP.md)
+
+เจ้าของเพิ่ม HTTPS callback แล้วและรายงาน Google สำเร็จหนึ่งบัญชี ตรวจ NAS พบ Google identity หนึ่งรายการ แต่บัญชีอื่นยังมีปัญหา แก้หน้า wallet ให้แสดง oauth_error ก่อน session gate แล้ว ไม่สรุปว่าเกิดจาก Testing เพราะ request ใช้เฉพาะ basic identity scopes ยังต้องตรวจบัญชีอื่นและ Discord จริง
 
 ## โครงสร้าง
 

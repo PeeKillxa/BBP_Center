@@ -89,10 +89,22 @@ export function Auth() {
 }
 
 export function Wallet() {
+  const { search } = useLocation()
+  const oauthError = new URLSearchParams(search).get('oauth_error')
   return (
-    <SignedIn>
-      <WalletContent />
-    </SignedIn>
+    <>
+      {oauthError && (
+        <Notice tone="danger" className="mb-4">
+          {messageFor(oauthError)}
+          <Link to={`/login${search}`} className="ml-2 text-accent underline">
+            กลับไปหน้าเข้าสู่ระบบ
+          </Link>
+        </Notice>
+      )}
+      <SignedIn>
+        <WalletContent />
+      </SignedIn>
+    </>
   )
 }
 function WalletContent() {

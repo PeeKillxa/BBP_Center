@@ -6,7 +6,19 @@
 
 ติดตั้งครั้งแรกวันที่ 2026-11-03 โดยนำสำเนา SQLite ที่สร้างด้วย online backup จากเครื่องเจ้าของมาด้วย บัญชีเดิมยังอยู่ ตั้งค่า Docker ให้เริ่มอัตโนมัติและใช้พอร์ต 3080 เฉพาะ IP LAN ของ NAS
 
-## ติดตั้งผ่าน Docker Compose
+## สถานะใช้งานวันที่ 2026-11-04
+
+- เว็บหลัก: `https://bbpcenter.duckdns.org` ใช้ได้เฉพาะอุปกรณ์ที่เข้าถึงวง LAN ของ NAS
+- DuckDNS ชี้ A record ไป `10.1.251.3` ตามตัวเลือกของเจ้าของ ใบรับรอง HTTPS จริงตรวจสอบได้โดยไม่ต้องข้ามคำเตือนเบราว์เซอร์ Caddy ต่ออายุผ่าน DNS challenge
+- ใช้ `compose.nas.https.yaml` เป็นชุดที่กำลังรัน พอร์ต 3080 redirect ไป HTTPS แล้ว ไม่ใช้ HTTP compose อีกชุดพร้อมกัน
+- Backend ใช้ NODE_ENV=production และเปิดเฉพาะใน Docker คัดลอก Google/Discord credentials เดิมมาไว้ใน server/.env แล้ว แต่ยังต้องตั้ง callback ใน provider ให้ตรงชื่อใหม่
+- เจ้าของยืนยันเพิ่ม HTTPS callback แล้ว และ Google สำเร็จหนึ่งบัญชีตามรายงาน/Google identity บน NAS ยังต้องตรวจบัญชีอื่นและ Discord จริง
+- TrueMoney ยังปิดระหว่างตั้งค่า LAN ไม่มีการรับซองเงินจริงในรอบนี้
+- คงเว็บฟาร์มพอร์ต 3000 และ Cloudflare Tunnel เดิมไว้
+
+สำรองก่อนเปลี่ยน HTTPS อยู่ใน `backups/before-https-*` รวม DB, delivery key, ค่าตั้งเดิมและ DNS เดิม ไฟล์ลับและ TLS data ไม่อยู่ใน Git
+
+## วิธีติดตั้ง HTTP บน LAN ครั้งแรก (ประวัติ/ทางกลับ)
 
 ใช้โฟลเดอร์ย่อย `BBP_CENTER` บน STUDENT โดยฐานข้อมูล bind mount จาก `server/data` บน ext4 ของ NAS โดยตรง ไม่เปิด SQLite ผ่าน SMB จากเครื่อง Windows
 
@@ -67,7 +79,7 @@ Container ใช้ UID 10001 โดยไม่ใช้ root, อ่าน roo
 
 พอร์ต 3080 มีไว้ตรวจเว็บผ่าน LAN การติดตั้งนี้ไม่ได้เพิ่ม public DNS route หรือแก้ Cloudflare Tunnel เดิม
 
-## HTTPS ผ่าน DuckDNS (ไฟล์เตรียมติดตั้ง)
+## HTTPS ผ่าน DuckDNS
 
 `compose.nas.https.yaml` เป็นชุด HTTPS สำหรับ `bbpcenter.duckdns.org` ใช้แทน compose.nas.yaml เมื่อพร้อม ไม่ต้องรันสองชุดพร้อมกัน
 

@@ -2,6 +2,21 @@
 
 โค้ดรองรับ OAuth จริงฝั่ง server แล้ว ต้องสร้าง client กับผู้ให้บริการและกรอกค่าเองใน `server/.env` ก่อนใช้งาน ไม่ส่ง Client Secret ในแชตหรือใส่ใน `app/` / ตัวแปร `VITE_*`
 
+## NAS ที่ใช้อยู่ตอนนี้
+
+เข้า `https://bbpcenter.duckdns.org/login` ภายใน LAN ค่า credentials เดิมถูกตั้งบน NAS แล้วและ backend ส่ง callback ชื่อ HTTPS นี้:
+
+```text
+Google:  https://bbpcenter.duckdns.org/api/auth/oauth/google/callback
+Discord: https://bbpcenter.duckdns.org/api/auth/oauth/discord/callback
+```
+
+เพิ่ม Google URL ใน Authorized redirect URIs ของ Web application client เดิม ส่วน Discord เพิ่มใน OAuth2 → Redirects ของ application เดิม ไม่ต้องสร้าง client/secret ใหม่ หากมีช่อง JavaScript origins ของ Google ให้เพิ่ม `https://bbpcenter.duckdns.org` ด้วย
+
+เจ้าของยืนยันเพิ่ม HTTPS callback แล้ววันที่ 2026-11-04 และรายงานว่า Google ล็อกอินสำเร็จหนึ่งบัญชี ตรวจฐานข้อมูล NAS พบ Google identity หนึ่งรายการ แต่ยังต้องตรวจการเข้าใช้ด้วยบัญชีอื่นและ Discord จนได้ session จริง
+
+คำแนะนำ localhost ด้านล่างใช้สำหรับพัฒนาบนเครื่อง Windows และสามารถคง URI เดิมไว้ควบคู่กันได้
+
 ## 1. Google
 
 1. เปิด [Google Cloud Console](https://console.cloud.google.com/apis/credentials) เลือก/สร้าง project สำหรับร้าน
@@ -60,8 +75,16 @@ DISCORD_CLIENT_SECRET=
 
 ## ผลตรวจของการพัฒนา
 
-Server tests รวม 13 กรณีผ่าน (รวม OAuth 6 กรณีซึ่งมีหลาย assertions) Frontend 61 tests และ type/build ผ่าน ทดสอบ provider token exchange/profile ด้วย mock HTTP และทดสอบลายเซ็น Google ด้วย RSA key ที่สร้างใน test
+Server tests 21 กรณี และ frontend 13 กรณีผ่าน พร้อม type/build ผ่าน ทดสอบ provider token exchange/profile ด้วย mock HTTP และทดสอบลายเซ็น Google ด้วย RSA key ที่สร้างใน test
 
-ยังไม่ได้ login กับ Google/Discord จริง เพราะต้องให้เจ้าของสร้าง client และตั้ง credentials ก่อน การทดสอบจำลองไม่ยืนยันการตั้งค่า consent/redirect ของแอปที่เจ้าของสร้าง
+NAS มี credentials และ HTTPS แล้ว ตรวจ redirect เริ่มต้นของทั้งสอง provider ได้และ flow cookie เป็น Secure/HttpOnly การเข้าสู่ระบบจนได้ session จริงยังต้องทดสอบหลังตั้ง callback ใน provider โดยเจ้าของบัญชี
 
 ตรวจ Chromium ที่ `/login` แล้ว: ปุ่ม Google/Discord ปิดพร้อมเหตุผลเมื่อ credentials ว่าง และ console ไม่มี error ขณะโหลดหน้า
+
+## เมื่อเลือกเมลอื่นแล้วไม่เห็นผล
+
+แอปไม่มี email allowlist และ Google request ใช้เฉพาะ `openid email profile` พร้อม `prompt=select_account` ตามเอกสาร Google สิทธิ์พื้นฐานนี้ได้รับข้อยกเว้นจากรายชื่อ Test users แม้อยู่ใน Testing จึงไม่ควรสรุปว่าต้อง Publish ก่อนโดยไม่มี error จริง
+
+OAuth callback กลับมาที่ `/wallet/live?oauth_error=...` ซึ่ง redirect ไป `/wallet` โดยรักษา query ไว้ หน้า wallet แสดงข้อความผิดพลาดก่อน gate ตรวจ session เพื่อไม่ซ่อนสาเหตุจากผู้ที่ยังล็อกอินไม่สำเร็จ
+
+หากขึ้น `oauth-account-exists` ให้เข้าบัญชีเดิมก่อน แล้วไป `/account/profile` เพื่อเชื่อม Google ระบบไม่รวมบัญชีหรือยอดเงินโดยอาศัยอีเมลเพียงอย่างเดียว
