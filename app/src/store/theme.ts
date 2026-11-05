@@ -8,9 +8,9 @@ const mq = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-sch
 const read = (): ThemeChoice => {
   try {
     const v = localStorage.getItem(KEY)
-    return v === 'light' || v === 'dark' ? v : 'system'
+    return v === 'light' || v === 'dark' || v === 'system' ? v : 'dark'
   } catch {
-    return 'system'
+    return 'dark'
   }
 }
 

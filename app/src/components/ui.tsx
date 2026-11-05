@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { LoaderCircle } from 'lucide-react'
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
 import { useId } from 'react'
@@ -28,7 +28,7 @@ export function Button({ variant = 'primary', size = 'md', loading, icon, classN
       whileTap={disabled || loading ? undefined : { scale: 0.96 }}
       transition={{ duration: 0.12 }}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-xl font-medium select-none transition-colors duration-150',
+        'store-button inline-flex items-center justify-center gap-2 rounded-xl font-medium select-none transition-colors duration-150',
         'disabled:cursor-not-allowed disabled:opacity-55',
         VARIANT[variant],
         SIZE[size],
@@ -46,7 +46,7 @@ export function Button({ variant = 'primary', size = 'md', loading, icon, classN
 
 export function ButtonLink({ to, variant = 'primary', size = 'md', className, children, icon }: { to: string; variant?: Variant; size?: keyof typeof SIZE; className?: string; children: ReactNode; icon?: ReactNode }) {
   return (
-    <Link to={to} className={cn('inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors duration-150 active:scale-[0.97]', VARIANT[variant], SIZE[size], className)}>
+    <Link to={to} className={cn('store-button inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors duration-150 active:scale-[0.97]', VARIANT[variant], SIZE[size], className)}>
       {icon}
       {children}
     </Link>
@@ -54,7 +54,9 @@ export function ButtonLink({ to, variant = 'primary', size = 'md', className, ch
 }
 
 export function Card({ className, children, lift, as: As = 'div' }: { className?: string; children: ReactNode; lift?: boolean; as?: 'div' | 'section' | 'article' }) {
-  return <As className={cn('rounded-2xl border border-line bg-surface', lift && 'card-lift', className)}>{children}</As>
+  const reduced = useReducedMotion()
+  const Surface = As === 'article' ? motion.article : As === 'section' ? motion.section : motion.div
+  return <Surface initial={false} whileInView={reduced ? undefined : { opacity: [0.75, 1], y: [8, 0] }} viewport={{ once: true, amount: 0.08 }} transition={{ duration: .32 }} className={cn('store-card rounded-2xl border border-line bg-surface', lift && 'card-lift', className)}>{children}</Surface>
 }
 
 type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'accent'

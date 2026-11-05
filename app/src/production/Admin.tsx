@@ -39,6 +39,7 @@ function AdminAuthorized({ reloadShop }: { reloadShop: () => Promise<void> }) {
   }
   return (
     <>
+      <p className="eyebrow mb-3">BBP STORE MANAGEMENT</p>
       <PageHeader title="จัดการร้าน BBP Center" />
       <nav className="mb-5 flex flex-wrap gap-2">
         {[
@@ -49,6 +50,8 @@ function AdminAuthorized({ reloadShop }: { reloadShop: () => Promise<void> }) {
         ].map(([value, label]) => (
           <Button
             key={value}
+            aria-pressed={tab === value}
+            data-sound="menu"
             variant={tab === value ? 'primary' : 'secondary'}
             onClick={() => {
               setTab(value)

@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Gem, Sprout, PackageOpen } from 'lucide-react'
 import { Button, ButtonLink, Card, EmptyState, Notice, PageHeader, Field, Badge } from '../components/ui'
-import { Logo } from '../components/Logo'
 import { formatTHB } from '../lib/money'
 import { formatDurationTH } from '../lib/time'
 import { idempotencyKey } from '../lib/idempotency'
 import { api, type Listing, type Quote } from './api'
 import { useAction, useShop } from './context'
+import { CatalogSkeleton } from '../components/CatalogSkeleton'
 import { InventoryTools, groupListings, categoryPath, CategoryCard } from './Inventory'
 
 const statusText: Record<string, string> = { available: 'พร้อมขาย', reserved: 'จองแล้ว', sold: 'ขายแล้ว' }
@@ -28,23 +28,26 @@ export function ListingCard({ listing }: { listing: Listing & { stock?: number }
   )
 }
 export function Home() {
-  const { catalog } = useShop()
+  const { catalog, loading } = useShop()
   return (
     <div className="space-y-12">
-      <section className="hero-gradient -mx-4 -mt-6 border-b border-line px-4 py-16 text-center">
-        <div className="mx-auto max-w-3xl space-y-5">
-          <Logo size={100} withText={false} />
-          <h1 className="text-5xl font-extrabold">
-            BBP <span className="text-accent">Center</span>
-          </h1>
-          <p className="text-lg text-muted">ไอดี Roblox และบริการฟาร์ม Anime Adventures / Anime Vanguards</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <ButtonLink to="/maps" icon={<Gem className="size-5" />}>
-              เลือกซื้อไอดี
-            </ButtonLink>
-            <ButtonLink to="/farm" variant="secondary" icon={<Sprout className="size-5" />}>
-              บริการฟาร์ม
-            </ButtonLink>
+      <section className="premium-hero relative isolate overflow-hidden rounded-3xl border border-line px-6 py-12 sm:p-12 lg:py-20">
+        <div className="hero-light" aria-hidden="true" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
+          <div className="space-y-6">
+            <p className="eyebrow">BBP CENTER / ROBLOX STORE</p>
+            <h1 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-6xl">พร้อมสำหรับ<br /><span className="text-accent">การผจญภัยครั้งใหม่</span></h1>
+            <p className="max-w-lg text-base leading-relaxed text-muted sm:text-lg">เลือกไอดีที่ใช่ แล้วไปต่อในเกมที่ชอบ<br />ไอดี Roblox และบริการฟาร์ม ดูแลโดยทีม BBP Center</p>
+            <div className="flex flex-wrap gap-3">
+              <ButtonLink to="/maps" size="lg" icon={<Gem className="size-5" />}>เลือกซื้อไอดี</ButtonLink>
+              <ButtonLink to="/farm" size="lg" variant="secondary" icon={<Sprout className="size-5" />}>บริการฟาร์ม</ButtonLink>
+            </div>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 pt-4 text-xs text-muted"><span>ผู้ให้บริการโดยตรง</span><span>ชำระผ่านกระเป๋าในร้าน</span><span>ติดตามคำสั่งซื้อได้</span></div>
+          </div>
+          <div className="hero-brand relative mx-auto flex aspect-square w-full max-w-[340px] items-center justify-center">
+            <div className="brand-orbit" aria-hidden="true" />
+            <img src="/brand/bbp-center-logo.png" alt="BBP Center" className="brand-intro relative w-4/5 object-contain" width="320" height="320" />
+            <span className="absolute bottom-0 rounded-full border border-line bg-surface px-5 py-2 text-xs tracking-widest text-accent">YOUR NEXT ADVENTURE</span>
           </div>
         </div>
       </section>
@@ -58,7 +61,8 @@ export function Home() {
         </div>
       </section>
       <section>
-        <h2 className="mb-6 text-2xl font-bold">ไอดีพร้อมขาย</h2>
+        <div className="mb-6 flex items-center justify-between gap-4"><h2 className="text-2xl font-bold">ไอดีพร้อมขาย</h2><Link to="/maps" className="text-sm text-accent">ดูทั้งหมด →</Link></div>
+        {loading && <CatalogSkeleton />}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {groupListings(catalog?.listings ?? [])
             .filter((item) => item.status === 'available')
@@ -108,6 +112,7 @@ export function Maps() {
     )
   return (
     <>
+      <p className="eyebrow mb-3">EXPLORE THE COLLECTION</p>
       <PageHeader title={title} />
       <nav aria-label="เส้นทางหมวดหมู่" className="mb-4 flex flex-wrap gap-2 text-accent">
         <Link to="/maps">หมวดหมู่ทั้งหมด</Link>
@@ -149,7 +154,7 @@ export function Maps() {
         </label>
       </Card>
       {loading ? (
-        <p role="status">กำลังโหลดสินค้า…</p>
+        <CatalogSkeleton />
       ) : listings.length ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {listings.map((item) => (
@@ -174,7 +179,7 @@ export function ListingDetail() {
     [image, setImage] = useState(0)
   const buyKey = useMemo(() => idempotencyKey(), [listing?.id]),
     reserveKey = useMemo(() => idempotencyKey(), [listing?.id])
-  if (loading) return <p role="status">กำลังโหลดสินค้า…</p>
+  if (loading) return <CatalogSkeleton />
   if (!listing) return <PageHeader title="ไม่พบสินค้านี้" />
   const submit = (reserve: boolean) =>
     void action.run(async () => {
@@ -308,7 +313,7 @@ export function Farm() {
   if (serviceId && serviceId !== 'aa-diamond') return <PageHeader title="บริการนี้ยังไม่เปิดรับคำสั่งซื้อ" />
   return (
     <>
-      <PageHeader title="ฟาร์มเพชร Anime Adventures" subtitle="เลือกแพ็กเกจหรือกำหนดจำนวนเพชร" />
+      <div className="mb-8 rounded-3xl border border-line bg-surface p-6 sm:p-8"><p className="eyebrow mb-3">BBP FARM SERVICE</p><PageHeader title="ให้เราดูแลการฟาร์มของคุณ" subtitle="ฟาร์มเพชร Anime Adventures · เลือกแพ็กเกจและตรวจยอดก่อนยืนยัน" /><ol className="grid gap-4 text-sm sm:grid-cols-3">{['เลือกจำนวนเพชร', 'อ่านเงื่อนไขและยืนยันยอด', 'ติดตามงานในบัญชีของฉัน'].map((text,index) => <li key={text} className="flex items-center gap-3"><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold text-accent">{index+1}</span>{text}</li>)}</ol></div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-5 p-5">
           <div className="grid grid-cols-2 gap-3">
@@ -340,10 +345,11 @@ export function Farm() {
             </p>
           )}
         </Card>
-        <Card className="h-fit space-y-4 p-5">
+        <Card className="h-fit space-y-4 p-6 lg:sticky lg:top-24">
+          {!quote && !quoteError && <p role="status" className="skeleton h-16 rounded-xl"><span className="sr-only">กำลังคำนวณราคา</span></p>}
           {quote && (
             <>
-              <p className="text-3xl font-bold">{formatTHB(quote.priceSatang)}</p>
+              <p className="text-xs text-muted">ราคารวมบริการ</p><p className="text-4xl font-extrabold text-accent">{formatTHB(quote.priceSatang)}</p>
               <p>เวลาฟาร์มประมาณ {formatDurationTH(quote.estimateSeconds)}</p>
               <p className="text-sm text-muted">
                 คิดจาก 18 เพชรต่อรอบ รอบละ 2 นาที รวม rejoin ไม่รวมคิว เวลายืนยันบัญชี และเหตุขัดข้อง

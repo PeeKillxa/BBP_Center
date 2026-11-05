@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "project": {
+    "name": "bbp-center",
+    "productType": "Single-operator Roblox account and farming store",
+    "stack": [
+      "react",
+      "tailwind-v4",
+      "vite"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/index.css"
+    ],
+    "components": [],
+    "assets": [
+      "public/brand"
+    ],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light-and-dark",
+    "colors": {
+      "--border": {
+        "value": "#263a60",
+        "source": "src/index.css"
+      },
+      "--muted": {
+        "value": "#a9b8d6",
+        "source": "src/index.css"
+      },
+      "--primary": {
+        "value": "#2563eb",
+        "source": "src/index.css"
+      },
+      "--primary-hover": {
+        "value": "#1d4ed8",
+        "source": "src/index.css"
+      },
+      "--accent": {
+        "value": "#22d3ee",
+        "source": "src/index.css"
+      },
+      "--accent-soft": {
+        "value": "#0c3044",
+        "source": "src/index.css"
+      },
+      "--ring": {
+        "value": "#22d3ee",
+        "source": "src/index.css"
+      },
+      "--color-bg": {
+        "value": "var(--bg)",
+        "source": "src/index.css"
+      },
+      "--color-surface": {
+        "value": "var(--surface)",
+        "source": "src/index.css"
+      },
+      "--color-surface-2": {
+        "value": "var(--surface-2)",
+        "source": "src/index.css"
+      },
+      "--color-line": {
+        "value": "var(--border)",
+        "source": "src/index.css"
+      },
+      "--color-ink": {
+        "value": "var(--text)",
+        "source": "src/index.css"
+      },
+      "--color-muted": {
+        "value": "var(--muted)",
+        "source": "src/index.css"
+      },
+      "--color-primary": {
+        "value": "var(--primary)",
+        "source": "src/index.css"
+      },
+      "--color-primary-hover": {
+        "value": "var(--primary-hover)",
+        "source": "src/index.css"
+      },
+      "--color-accent": {
+        "value": "var(--accent)",
+        "source": "src/index.css"
+      },
+      "--color-accent-soft": {
+        "value": "var(--accent-soft)",
+        "source": "src/index.css"
+      },
+      "--color-success": {
+        "value": "var(--success)",
+        "source": "src/index.css"
+      },
+      "--color-warning": {
+        "value": "var(--warning)",
+        "source": "src/index.css"
+      },
+      "--color-danger": {
+        "value": "var(--danger)",
+        "source": "src/index.css"
+      }
+    },
+    "typography": {
+      "--text": {
+        "value": "#f5f9ff",
+        "source": "src/index.css"
+      },
+      "--font-sans": {
+        "value": "'Noto Sans Thai Variable', 'Noto Sans Thai', system-ui, sans-serif",
+        "source": "src/index.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {
+      "--ease-out-soft": {
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "source": "src/index.css"
+      }
+    },
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [
+      "src/components/ui.tsx",
+      "motion/react",
+      "lucide-react"
+    ],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    "User-approved premium gaming direction: dark navy, electric blue and cyan; preserve explicit light/system preference.",
+    "Square 1:1 catalog artwork without cropping; responsive 2/3/4-column catalog.",
+    "Sound off by default, opt-in only; reduced motion and keyboard navigation preserved.",
+    "Preserve existing direct-purchase, wallet, farm, admin and API behavior. No marketplace or cart."
+  ],
+  "evidence": [
+    {
+      "fact": "design.colorMode:light-and-dark",
+      "source": "src/index.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/index.css"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:vite",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-11-05T07:47:02.114Z"
+}

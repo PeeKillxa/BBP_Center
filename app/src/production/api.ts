@@ -131,5 +131,8 @@ export async function api<T = void>(path: string, data?: object, key?: string): 
   }
   const result = await response.json().catch(() => null)
   if (!response.ok || result === null) throw new ApiError(result?.error ?? 'server-error', response.status)
+  const messages: Record<string, string> = { '/purchase': 'ซื้อสำเร็จ ดูข้อมูลส่งมอบได้ในคำสั่งซื้อ', '/reservations': 'จองสินค้าแล้ว', '/reservations/settle': 'ชำระครบแล้ว รับข้อมูลส่งมอบได้เลย', '/farm/orders': 'รับคำสั่งฟาร์มแล้ว ติดตามความคืบหน้าได้ในบัญชี', '/admin/stock': 'เพิ่มสต็อกสินค้าแล้ว', '/admin/settings': 'บันทึกการตั้งค่าร้านแล้ว' }
+  const message = path === '/topups/truemoney' && result.topup?.status === 'success' ? 'เติมเงินสำเร็จ ตรวจยอดได้ในกระเป๋าเงิน' : messages[path]
+  if (data && message && typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('bbp-success', { detail: message }))
   return result as T
 }

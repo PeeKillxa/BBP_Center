@@ -126,3 +126,35 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* BBP premium store: shared surfaces, controls and motion. */
+.dark { --bg:#060a14; --surface:#0e1728; --surface-2:#15223a; --border:#24364e; --primary:#2563eb; --primary-hover:#1d4ed8; --accent:#5ce5f7; --muted:#a8b8cf; }
+body { background-image:radial-gradient(ellipse at 80% 0%,rgb(37 99 235 / .09),transparent 45%); }
+.premium-hero { background:linear-gradient(125deg,var(--surface),var(--bg)); }
+.eyebrow { color:var(--accent); font-size:.7rem; font-weight:700; letter-spacing:.22em; }
+.hero-light { position:absolute; inset:0; pointer-events:none; opacity:.6; background:radial-gradient(ellipse at 80% 45%,rgb(34 211 238 / .16),transparent 50%); animation:ambient 16s ease-in-out infinite alternate; }
+.brand-orbit { position:absolute; inset:8%; border:1px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:orbit 35s linear infinite; box-shadow:0 0 70px rgb(37 99 235 / .15); }
+.brand-intro { animation:brand-enter .8s cubic-bezier(.2,.8,.2,1) both; filter:drop-shadow(0 14px 30px rgb(0 0 0 / .3)); }
+.store-card { box-shadow:0 8px 28px rgb(0 0 0 / .06); }
+.store-button { position:relative; transition:background-color .18s, border-color .18s,box-shadow .18s,transform .18s; }
+.store-button:active { transform:scale(.97); }
+.store-button:focus-visible { outline-offset:4px; }
+input:not([type=checkbox]):not([type=file]),select,textarea { transition:border-color .2s,box-shadow .2s; }
+input:focus,select:focus,textarea:focus { border-color:var(--accent); }
+header nav a { border-radius:10px; padding:8px 12px; font-size:.875rem; font-weight:600; }
+header nav a[aria-current=page] { background:var(--accent-soft); }
+.store-toast { position:fixed; right:16px; bottom:100px; z-index:60; width:min(360px,calc(100vw - 32px)); padding:16px; border:1px solid var(--accent); border-radius:16px; background:var(--surface); box-shadow:0 16px 60px rgb(0 0 0 / .3); }
+@media (hover:hover) and (pointer:fine) {
+  .card-lift:hover { transform:perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px)!important; box-shadow:0 18px 40px -16px var(--glow); }
+  .store-button:hover { box-shadow:0 5px 24px rgb(37 99 235 / .2); }
+}
+@keyframes ambient { to { transform:translate3d(-4%,3%,0); } }
+@keyframes orbit { to { transform:rotate(360deg); } }
+@keyframes brand-enter { from { opacity:0; transform:scale(.9) translateY(14px); } to { opacity:1; transform:none; } }
+@media (max-width:639px) { .hero-brand { max-width:220px; } .hero-light,.brand-orbit { animation:none; } header .store-button { padding-inline:10px; } }
+@media (prefers-reduced-motion:reduce) { .hero-light,.brand-orbit,.brand-intro,.skeleton { animation:none!important; } .card-lift:hover,.store-button:active { transform:none!important; } }
+
+.store-dialog { margin:auto; width:min(440px,calc(100vw - 32px)); max-height:85vh; overflow:auto; padding:24px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:24px; box-shadow:0 30px 100px #0008; }
+.store-dialog::backdrop { background:rgb(0 5 15 / .75); backdrop-filter:blur(4px); }
+
+.card-lift:focus-within { transform:none!important; }

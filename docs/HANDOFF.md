@@ -57,3 +57,7 @@ Frontend tests 13 กรณี, production build และ 21st review ผ่า
 การเชื่อม SSH รอบแรกคลาดเคลื่อนจากขั้นตอนรับรหัสผ่านใน Windows PTY เมื่อลอง Paramiko ส่ง password โดยตรงเข้าได้ตามปกติ ไม่ใช่ NAS ปิด SSH หรือเปลี่ยนรหัส ไม่ใส่รหัสผ่านใน Git หรือไฟล์ deploy
 
 หลังได้สิทธิ์ deploy ให้ใช้ compose.nas.https.yaml ร่วม compose.nas.public.yaml และโหลด deploy/ngrok/.env เสมอ อย่าใช้ Compose LAN เพียงชุดเดียว การแก้นี้ไม่ต้องเปลี่ยน .env, DB, callback หรือ tunnel
+
+## Premium UI (2026-11-05)
+
+See `PREMIUM_UI.md` for the new design, opt-in SFX, motion/accessibility behavior, changed files and verification. Existing square artwork and all server business rules remain in place.

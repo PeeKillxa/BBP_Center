@@ -1,6 +1,7 @@
 import { Moon, Sun, Monitor, House, Gem, Sprout, Wallet, UserRound } from 'lucide-react'
 import { MotionConfig } from 'motion/react'
-import { useEffect } from 'react'
+import { StoreExperience } from '../components/StoreExperience'
+import { useEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Logo } from '../components/Logo'
 import { Button, Notice } from '../components/ui'
@@ -9,12 +10,17 @@ import { api } from './api'
 import { useAction, useShop } from './context'
 
 export function Layout() {
+  const main = useRef<HTMLElement>(null)
   const { session, catalog, error, reload } = useShop()
   const { pathname } = useLocation(),
     theme = useTheme(),
     action = useAction()
   useEffect(() => {
     window.scrollTo(0, 0)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const animation = main.current?.animate([{ opacity: .5, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'ease-out' })
+      return () => animation?.cancel()
+    }
   }, [pathname])
   const nav = [
     { to: '/', text: 'หน้าแรก', icon: House },
@@ -36,7 +42,7 @@ export function Layout() {
           <Link to="/" aria-label="BBP Center หน้าแรก">
             <Logo size={40} className="[&>span]:hidden sm:[&>span]:inline" />
           </Link>
-          <nav className="ml-5 hidden gap-4 lg:flex" aria-label="เมนูหลัก">
+          <nav className="ml-5 hidden gap-1 lg:flex" aria-label="เมนูหลัก">
             {nav.slice(1).map((item) => (
               <NavLink
                 key={item.to}
@@ -48,6 +54,7 @@ export function Layout() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-1">
+            <StoreExperience />
             {(
               [
                 { value: 'light', icon: Sun, label: 'ธีมสว่าง' },
@@ -87,7 +94,7 @@ export function Layout() {
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto min-h-[65vh] max-w-7xl px-4 pt-6 pb-24">
+      <main ref={main} id="main" className="mx-auto min-h-[65vh] max-w-7xl px-4 pt-6 pb-24">
         {(error || action.error) && (
           <p role="alert" className="mb-4 text-danger">
             {error || action.error}
@@ -100,7 +107,7 @@ export function Layout() {
         )}
         <Outlet />
       </main>
-      <footer className="border-t border-line px-4 py-8 pb-28 text-sm text-muted md:pb-8">
+      <footer className="border-t border-line px-4 py-8 pb-28 text-sm text-muted lg:pb-8">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-4">
           <span>BBP Center · ร้านผู้ขายรายเดียว ไม่มีความเกี่ยวข้องหรือการรับรองจาก Roblox</span>
           <Link to="/help" className="text-accent">
@@ -110,7 +117,7 @@ export function Layout() {
       </footer>
       <nav
         aria-label="เมนูมือถือ"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         {nav.map((item) => (
           <NavLink

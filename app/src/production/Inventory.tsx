@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { ConfirmPanel } from '../components/StoreExperience'
 import { Link } from 'react-router'
 import { Plus, Upload, Trash2 } from 'lucide-react'
 import { Button, Card, Field } from '../components/ui'
@@ -31,10 +32,11 @@ export function InventoryTools({ mapId, template, onSaved }: { mapId?: string; t
       {template && template.status !== 'archived' && !confirmRemove && <Button size="sm" variant="ghost" className="ml-auto text-danger" icon={<Trash2 size={16} aria-hidden />} onClick={() => setConfirmRemove(true)}>ลบ</Button>}
     </div>
     {template && template.status !== 'archived' && <div className="space-y-2">
-      {!confirmRemove ? null : <>
+      <ConfirmPanel open={confirmRemove} onClose={() => setConfirmRemove(false)}>
         <p className="text-sm">นำสต็อกพร้อมขายทั้งหมดของ “{template.title}” ออกจากหน้าร้าน?</p>
         <div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={category.busy} onClick={() => void category.run(async () => { await api('/admin/products/remove', { id: template.id }); setConfirmRemove(false); await reload(); await onSaved?.() })}>ยืนยันลบสินค้า</Button><Button size="sm" variant="ghost" onClick={() => setConfirmRemove(false)}>ยกเลิก</Button></div>
-      </>}
+        {category.error && <p role="alert" className="mt-3 text-danger">{category.error}</p>}
+      </ConfirmPanel>
       {category.error && <p role="alert" className="text-danger">{category.error}</p>}
     </div>}
     {message && <p role="status" className="text-success">{message}</p>}
@@ -173,7 +175,7 @@ export function CategoryCard({ category }: { category: { id: string; name: strin
   const [uploading, setUploading] = useState(false)
   const products = catalog?.listings.filter(item => categoryPath(catalog.maps, item.mapId).some(map => map.id === category.id)) ?? []
   const cover = category.image || products.find(item => item.images.length)?.images[0] || '/brand/bbp-center-logo.png'
-  return <Card className="self-start overflow-hidden">
+  return <Card lift className="self-start overflow-hidden">
     <Link className="block" to={`/maps/${category.id}`}>
       <img src={cover} alt={category.name} loading="lazy" className="aspect-square w-full bg-surface-2 object-contain" />
       <div className="space-y-2 p-4"><h3 className="text-xl font-bold">{category.name}</h3><p className="text-sm text-accent">{products.filter(item => item.status === 'available').length} บัญชีพร้อมขาย →</p></div>
@@ -185,7 +187,7 @@ export function CategoryCard({ category }: { category: { id: string; name: strin
         <CoverPicker value={image} onChange={setImage} onBusyChange={setUploading} />
         <Button size="sm" type="submit" disabled={uploading} loading={action.busy}>บันทึกรูปและชื่อ</Button>
       </form>}
-      {confirm && <div className="space-y-2"><p className="text-sm">ลบหมวด “{category.name}” ออกจากหน้าร้าน? หมวดต้องไม่มีสินค้าพร้อมขายหรือหมวดย่อย</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={action.busy} onClick={() => void action.run(async () => { await api('/admin/categories/edit', { id: category.id, remove: true }); await reload() })}>ยืนยันลบหมวดหมู่</Button><Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>ยกเลิก</Button></div></div>}
+      <ConfirmPanel open={confirm} onClose={() => setConfirm(false)}><div className="space-y-2"><p className="text-sm">ลบหมวด “{category.name}” ออกจากหน้าร้าน? หมวดต้องไม่มีสินค้าพร้อมขายหรือหมวดย่อย</p><div className="flex flex-wrap gap-2"><Button size="sm" variant="danger" loading={action.busy} onClick={() => void action.run(async () => { await api('/admin/categories/edit', { id: category.id, remove: true }); await reload() })}>ยืนยันลบหมวดหมู่</Button><Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>ยกเลิก</Button></div>{action.error && <p role="alert" className="text-danger">{action.error}</p>}</div></ConfirmPanel>
       {action.error && <p role="alert" className="text-danger">{action.error}</p>}
     </div>}
   </Card>

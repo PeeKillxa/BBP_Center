@@ -40,7 +40,8 @@ export function Auth() {
     })
   }
   return (
-    <Card className="mx-auto max-w-md space-y-5 p-6">
+    <Card className="relative mx-auto max-w-md space-y-5 overflow-hidden p-6 sm:p-8">
+      <div className="flex items-center gap-3 border-b border-line pb-5"><img src="/brand/bbp-center-logo.png" alt="BBP Center" width="56" height="56" className="rounded-full" /><div><p className="font-bold">BBP Center</p><p className="text-xs text-muted">บัญชีเดียวสำหรับไอดีเกมและบริการฟาร์ม</p></div></div>
       <PageHeader title={register ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'} />
       <OAuthButtons />
       <p className="text-center text-sm text-muted">หรือใช้อีเมลและรหัสผ่าน</p>
@@ -140,9 +141,9 @@ function WalletContent() {
       <PageHeader title="กระเป๋าเงินและเติมเงิน" />
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-5">
-          <Card className="p-6">
-            <p className="text-muted">ยอดเงินคงเหลือ</p>
-            <p className="mt-2 text-4xl font-bold">{data ? formatTHB(data.balanceSatang) : '—'}</p>
+          <Card className="premium-hero border-accent/40 p-6">
+            <p className="eyebrow mb-4">BBP WALLET</p><p className="text-muted">ยอดเงินคงเหลือ</p>
+            <p className="mt-2 text-4xl font-bold text-accent">{data ? formatTHB(data.balanceSatang) : '—'}</p>
             <Button variant="ghost" className="mt-3" onClick={() => void reload()}>
               โหลดประวัติล่าสุด
             </Button>
@@ -291,7 +292,8 @@ function AccountContent() {
           <Link
             key={path}
             to={`/account${path ? `/${path}` : ''}`}
-            className="rounded-xl border border-line px-3 py-2 text-sm text-accent"
+            aria-current={section === (path || 'overview') ? 'page' : undefined}
+            className={`rounded-xl border px-3 py-2 text-sm text-accent ${section === (path || 'overview') ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-2'}`}
           >
             {text}
           </Link>
