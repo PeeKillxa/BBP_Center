@@ -105,7 +105,7 @@ export function ListingForm({ mapId, template, onSaved, onCancel }: { mapId?: st
           </label>
           <p className="text-xs text-muted">JPG, PNG, WebP ไม่เกิน 5 MB ต่อรูป · สูงสุด 8 รูป · รูปแรกเป็นหน้าปก</p>
           {upload.busy && <p role="status">กำลังอัปโหลดรูป…</p>}
-          {images.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{images.map((src, index) => <div key={`${src}-${index}`} className="space-y-1"><img src={src} alt={`ภาพสินค้า ${index + 1}`} className="aspect-video w-full rounded-lg object-cover" /><Button type="button" size="sm" variant="ghost" aria-label={`นำภาพ ${index + 1} ออก`} onClick={() => setImages(images.filter((_, i) => i !== index))}>นำออก</Button></div>)}</div>}
+          {images.length > 0 && <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{images.map((src, index) => <div key={`${src}-${index}`} className="space-y-1"><img src={src} alt={`ภาพสินค้า ${index + 1}`} className="aspect-square w-full rounded-lg object-cover" /><Button type="button" size="sm" variant="ghost" aria-label={`นำภาพ ${index + 1} ออก`} onClick={() => setImages(images.filter((_, i) => i !== index))}>นำออก</Button></div>)}</div>}
           <details><summary className="cursor-pointer text-sm text-muted">หรือใช้ลิงก์รูป HTTPS</summary><div className="mt-2 flex flex-wrap items-end gap-2"><Field label="ลิงก์รูป" type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} /><Button type="button" variant="secondary" disabled={images.length >= 8 || !/^https:\/\//.test(imageUrl)} onClick={() => { setImages([...images, imageUrl.trim()]); setImageUrl('') }}>เพิ่มรูป</Button></div></details>
         </div>
         {([['description', 'รายละเอียดสินค้า'], ['attributes', 'คุณสมบัติ (ชื่อ:ค่า หนึ่งรายการต่อบรรทัด)'], ['transferTerms', 'เงื่อนไขการโอน'], ['warranty', 'เงื่อนไขการรับประกัน']] as const).map(([key, label]) => <label className="block space-y-2" key={key}>{label}<textarea className={area} maxLength={5000} required={key !== 'attributes'} value={draft[key]} onChange={e => setDraft({ ...draft, [key]: e.target.value })} /></label>)}
@@ -147,7 +147,7 @@ export function CoverPicker({ value, onChange, onBusyChange }: { value: string; 
   const upload = useAction()
   useEffect(() => { onBusyChange?.(upload.busy) }, [upload.busy, onBusyChange])
   return <div className="space-y-2">
-    {value && <img src={value} alt="ตัวอย่างรูปปกหมวดหมู่" className="aspect-video w-full rounded-xl bg-surface-2 object-contain" />}
+    {value && <img src={value} alt="ตัวอย่างรูปปกหมวดหมู่" className="aspect-square w-full rounded-xl bg-surface-2 object-contain" />}
     <label className="block space-y-2 text-sm">รูปปกหมวดหมู่
       <input type="file" disabled={upload.busy} accept="image/jpeg,image/png,image/webp" className="block w-full" onChange={event => {
         const file = event.target.files?.[0]; event.target.value = ''
@@ -174,8 +174,8 @@ export function CategoryCard({ category }: { category: { id: string; name: strin
   const products = catalog?.listings.filter(item => categoryPath(catalog.maps, item.mapId).some(map => map.id === category.id)) ?? []
   const cover = category.image || products.find(item => item.images.length)?.images[0] || '/brand/bbp-center-logo.png'
   return <Card className="self-start overflow-hidden">
-    <Link to={`/maps/${category.id}`}>
-      <img src={cover} alt={category.name} loading="lazy" className="aspect-video w-full bg-surface-2 object-contain" />
+    <Link className="block" to={`/maps/${category.id}`}>
+      <img src={cover} alt={category.name} loading="lazy" className="aspect-square w-full bg-surface-2 object-contain" />
       <div className="space-y-2 p-4"><h3 className="text-xl font-bold">{category.name}</h3><p className="text-sm text-accent">{products.filter(item => item.status === 'available').length} บัญชีพร้อมขาย →</p></div>
     </Link>
     {session.user?.isAdmin && <div className="space-y-3 border-t border-line px-4 py-3">

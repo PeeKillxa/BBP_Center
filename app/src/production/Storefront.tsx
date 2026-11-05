@@ -15,7 +15,7 @@ export function ListingCard({ listing }: { listing: Listing & { stock?: number }
   return (
     <Card as="article" lift className="self-start overflow-hidden">
       <Link className="block" to={`/listing/${listing.id}`}>
-        <img src={listing.images[0]} alt={listing.title} className="aspect-video w-full bg-surface-2 object-contain" loading="lazy" />
+        <img src={listing.images[0]} alt={listing.title} className="aspect-square w-full bg-surface-2 object-contain" loading="lazy" />
         <div className="space-y-2 p-4">
           <Badge tone={listing.status === 'available' ? 'success' : 'neutral'}>{statusText[listing.status]}</Badge>
           <h3 className="font-bold">{listing.title}</h3>
@@ -51,7 +51,7 @@ export function Home() {
       <section>
         <h2 className="mb-6 text-2xl font-bold">หมวดหมู่เกม</h2>
         <InventoryTools />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {catalog?.maps.filter(map => !map.parentId).map((map) => (
             <CategoryCard key={map.id} category={map} />
           ))}
@@ -59,7 +59,7 @@ export function Home() {
       </section>
       <section>
         <h2 className="mb-6 text-2xl font-bold">ไอดีพร้อมขาย</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {groupListings(catalog?.listings ?? [])
             .filter((item) => item.status === 'available')
             .slice(0, 4)
@@ -114,7 +114,7 @@ export function Maps() {
         {categoryPath(catalog?.maps ?? [], mapId).map(map => <span key={map.id}> / <Link to={`/maps/${map.id}`}>{map.name}</Link></span>)}
       </nav>
       <InventoryTools key={mapId ?? 'root'} mapId={mapId} />
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {catalog?.maps.filter(map => (map.parentId ?? null) === (mapId && mapId !== 'all' ? mapId : null)).map(map => <CategoryCard key={map.id} category={map} />)}
       </div>
       <Card className="mb-6 grid gap-4 p-4 sm:grid-cols-4">
@@ -151,7 +151,7 @@ export function Maps() {
       {loading ? (
         <p role="status">กำลังโหลดสินค้า…</p>
       ) : listings.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {listings.map((item) => (
             <ListingCard key={item.groupId ?? item.id} listing={item} />
           ))}
@@ -196,7 +196,7 @@ export function ListingDetail() {
           <img
             src={listing.images[image] ?? listing.images[0]}
             alt={listing.title}
-            className="aspect-video w-full rounded-2xl bg-surface-2 object-contain"
+            className="aspect-square w-full rounded-2xl bg-surface-2 object-contain"
           />
           <div className="mt-3 flex gap-2 overflow-x-auto">
             {listing.images.map((src, i) => (
