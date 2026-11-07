@@ -17,3 +17,21 @@ createRoot(document.getElementById('root')!).render(
     </AppErrorBoundary>
   </StrictMode>,
 )
+
+const loader = document.getElementById('app-loader')
+if (loader) {
+  let seen = false
+  try {
+    seen = sessionStorage.getItem('bbp-intro-seen') === '1'
+    sessionStorage.setItem('bbp-intro-seen', '1')
+  } catch {
+    // The intro still works when storage is unavailable.
+  }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  window.setTimeout(() => {
+    loader.classList.add('is-exiting')
+    loader.setAttribute('aria-hidden', 'true')
+    document.body.classList.remove('is-booting')
+    window.setTimeout(() => loader.remove(), reduced ? 150 : 720)
+  }, seen || reduced ? 120 : 1350)
+}

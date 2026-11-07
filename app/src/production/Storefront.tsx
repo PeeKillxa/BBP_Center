@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Gem, Sprout, PackageOpen } from 'lucide-react'
+import { ArrowUpRight, Gem, Sprout, PackageOpen, ShieldCheck, Sparkles, Zap } from 'lucide-react'
 import { Button, ButtonLink, Card, EmptyState, Notice, PageHeader, Field, Badge } from '../components/ui'
 import { formatTHB } from '../lib/money'
 import { formatDurationTH } from '../lib/time'
@@ -15,12 +15,15 @@ export function ListingCard({ listing }: { listing: Listing & { stock?: number }
   return (
     <Card as="article" lift className="self-start overflow-hidden">
       <Link className="block" to={`/listing/${listing.id}`}>
-        <img src={listing.images[0]} alt={listing.title} className="aspect-square w-full bg-surface-2 object-contain" loading="lazy" />
+        <div className="listing-media">
+          <img src={listing.images[0]} alt={listing.title} className="aspect-square w-full bg-surface-2 object-contain" loading="lazy" />
+          <span className="listing-shine" aria-hidden="true" />
+        </div>
         <div className="space-y-2 p-4">
           <Badge tone={listing.status === 'available' ? 'success' : 'neutral'}>{statusText[listing.status]}</Badge>
           <h3 className="font-bold">{listing.title}</h3>
           {listing.stock !== undefined && <p className="text-sm text-muted">เหลือ {listing.stock} บัญชี</p>}
-          <p className="text-lg font-bold text-accent">{formatTHB(listing.priceSatang)}</p>
+          <p className="flex items-center justify-between text-lg font-bold text-accent">{formatTHB(listing.priceSatang)}<ArrowUpRight className="size-4 opacity-60" aria-hidden="true" /></p>
         </div>
       </Link>
       <div className="px-4 pb-3"><InventoryTools template={listing} /></div>
@@ -31,28 +34,33 @@ export function Home() {
   const { catalog, loading } = useShop()
   return (
     <div className="space-y-12">
-      <section className="premium-hero relative isolate overflow-hidden rounded-3xl border border-line px-6 py-12 sm:p-12 lg:py-20">
+      <section className="premium-hero cinematic-hero relative isolate overflow-hidden rounded-[2rem] border border-line px-6 py-12 sm:p-12 lg:py-20">
         <div className="hero-light" aria-hidden="true" />
+        <div className="hero-grid" aria-hidden="true" />
+        <div className="hero-scanline" aria-hidden="true" />
         <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
-          <div className="space-y-6">
-            <p className="eyebrow">BBP CENTER / ROBLOX STORE</p>
-            <h1 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-6xl">พร้อมสำหรับ<br /><span className="text-accent">การผจญภัยครั้งใหม่</span></h1>
+          <div className="hero-copy space-y-6">
+            <p className="eyebrow flex items-center gap-2"><Sparkles className="size-3.5" aria-hidden="true" /> BBP CENTER / ROBLOX STORE</p>
+            <h1 className="text-4xl leading-[1.08] font-black tracking-[-.045em] sm:text-6xl">เลือกไอดีที่ใช่<br /><span className="hero-gradient-text">แล้วเข้าเกมให้สุด</span></h1>
             <p className="max-w-lg text-base leading-relaxed text-muted sm:text-lg">เลือกไอดีที่ใช่ แล้วไปต่อในเกมที่ชอบ<br />ไอดี Roblox และบริการฟาร์ม ดูแลโดยทีม BBP Center</p>
             <div className="flex flex-wrap gap-3">
               <ButtonLink to="/maps" size="lg" icon={<Gem className="size-5" />}>เลือกซื้อไอดี</ButtonLink>
               <ButtonLink to="/farm" size="lg" variant="secondary" icon={<Sprout className="size-5" />}>บริการฟาร์ม</ButtonLink>
             </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-2 pt-4 text-xs text-muted"><span>ผู้ให้บริการโดยตรง</span><span>ชำระผ่านกระเป๋าในร้าน</span><span>ติดตามคำสั่งซื้อได้</span></div>
+            <div className="hero-trust flex flex-wrap gap-3 pt-3 text-xs text-muted"><span><ShieldCheck /> ผู้ให้บริการโดยตรง</span><span><Zap /> ส่งมอบเป็นระบบ</span><span><Sparkles /> ติดตามงานได้</span></div>
           </div>
-          <div className="hero-brand relative mx-auto flex aspect-square w-full max-w-[340px] items-center justify-center">
+          <div className="hero-brand relative mx-auto flex aspect-square w-full max-w-[380px] items-center justify-center">
+            <div className="brand-halo" aria-hidden="true" />
             <div className="brand-orbit" aria-hidden="true" />
-            <img src="/brand/bbp-center-logo.png" alt="BBP Center" className="brand-intro relative w-4/5 object-contain" width="320" height="320" />
-            <span className="absolute bottom-0 rounded-full border border-line bg-surface px-5 py-2 text-xs tracking-widest text-accent">YOUR NEXT ADVENTURE</span>
+            <div className="brand-orbit brand-orbit-inner" aria-hidden="true" />
+            <img src="/brand/bbp-center-logo.png" alt="BBP Center" className="brand-intro relative z-10 w-4/5 object-contain" width="320" height="320" />
+            <span className="hero-float-card hero-float-top"><i /> LIVE STORE</span>
+            <span className="hero-float-card hero-float-bottom">YOUR NEXT ADVENTURE</span>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="mb-6 text-2xl font-bold">หมวดหมู่เกม</h2>
+        <p className="eyebrow mb-2">CHOOSE YOUR WORLD</p><h2 className="mb-6 text-2xl font-bold sm:text-3xl">หมวดหมู่เกม</h2>
         <InventoryTools />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {catalog?.maps.filter(map => !map.parentId).map((map) => (
@@ -61,7 +69,7 @@ export function Home() {
         </div>
       </section>
       <section>
-        <div className="mb-6 flex items-center justify-between gap-4"><h2 className="text-2xl font-bold">ไอดีพร้อมขาย</h2><Link to="/maps" className="text-sm text-accent">ดูทั้งหมด →</Link></div>
+        <div className="mb-6 flex items-end justify-between gap-4"><div><p className="eyebrow mb-2">READY TO PLAY</p><h2 className="text-2xl font-bold sm:text-3xl">ไอดีพร้อมขาย</h2></div><Link to="/maps" className="group flex items-center gap-1 text-sm text-accent">ดูทั้งหมด <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></Link></div>
         {loading && <CatalogSkeleton />}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {groupListings(catalog?.listings ?? [])
@@ -76,12 +84,12 @@ export function Home() {
         )}
       </section>
       <section>
-        <h2 className="mb-6 text-2xl font-bold">ขั้นตอนใช้งาน</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <p className="eyebrow mb-2">HOW IT WORKS</p><h2 className="mb-6 text-2xl font-bold sm:text-3xl">เริ่มเล่นได้ใน 4 ขั้นตอน</h2>
+        <div className="process-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {['เข้าสู่ระบบ', 'เติมเงินผ่าน TrueMoney', 'เลือกซื้อหรือจองสินค้า', 'รับข้อมูลส่งมอบ / ติดตามงาน'].map(
             (step, i) => (
-              <Card key={step} className="p-5">
-                <span className="text-accent">0{i + 1}</span>
+              <Card key={step} className="process-card p-5">
+                <span className="process-number">0{i + 1}</span>
                 <h3 className="mt-2 font-semibold">{step}</h3>
               </Card>
             ),

@@ -1,7 +1,7 @@
-import { Moon, Sun, Monitor, House, Gem, Sprout, Wallet, UserRound } from 'lucide-react'
-import { MotionConfig } from 'motion/react'
+import { Moon, Sun, Monitor, House, Gem, Sprout, Wallet, UserRound, LogOut } from 'lucide-react'
+import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
 import { StoreExperience } from '../components/StoreExperience'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Logo } from '../components/Logo'
 import { Button, Notice } from '../components/ui'
@@ -10,17 +10,13 @@ import { api } from './api'
 import { useAction, useShop } from './context'
 
 export function Layout() {
-  const main = useRef<HTMLElement>(null)
   const { session, catalog, error, reload } = useShop()
   const { pathname } = useLocation(),
     theme = useTheme(),
-    action = useAction()
+    action = useAction(),
+    reduced = useReducedMotion()
   useEffect(() => {
     window.scrollTo(0, 0)
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const animation = main.current?.animate([{ opacity: .5, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, easing: 'ease-out' })
-      return () => animation?.cancel()
-    }
   }, [pathname])
   const nav = [
     { to: '/', text: 'หน้าแรก', icon: House },
@@ -29,15 +25,27 @@ export function Layout() {
     { to: '/wallet', text: 'กระเป๋า', icon: Wallet },
     { to: '/account', text: 'บัญชี', icon: UserRound },
   ]
+  const themes = [
+    { value: 'light', icon: Sun, label: 'ธีมสว่าง' },
+    { value: 'dark', icon: Moon, label: 'ธีมมืด' },
+    { value: 'system', icon: Monitor, label: 'ตามระบบ' },
+  ] as const
+  const activeTheme = themes.find((item) => item.value === theme) ?? themes[1]
+  const nextTheme = themes[(themes.findIndex((item) => item.value === theme) + 1) % themes.length]
   return (
     <MotionConfig reducedMotion="user">
+      <div className="site-atmosphere" aria-hidden="true">
+        <span className="site-orb site-orb-one" />
+        <span className="site-orb site-orb-two" />
+        <span className="site-noise" />
+      </div>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 z-50 rounded-xl bg-primary p-3 text-white"
       >
         ข้ามไปยังเนื้อหา
       </a>
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
+      <header className="site-header sticky top-0 z-40 border-b border-line/80 bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
           <Link to="/" aria-label="BBP Center หน้าแรก">
             <Logo size={40} className="[&>span]:hidden sm:[&>span]:inline" />
@@ -47,7 +55,7 @@ export function Layout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => (isActive ? 'text-accent' : 'text-muted')}
+                className={({ isActive }) => `nav-link ${isActive ? 'is-active text-accent' : 'text-muted'}`}
               >
                 {item.text}
               </NavLink>
@@ -55,16 +63,18 @@ export function Layout() {
           </nav>
           <div className="ml-auto flex items-center gap-1">
             <StoreExperience />
-            {(
-              [
-                { value: 'light', icon: Sun, label: 'ธีมสว่าง' },
-                { value: 'dark', icon: Moon, label: 'ธีมมืด' },
-                { value: 'system', icon: Monitor, label: 'ตามระบบ' },
-              ] as const
-            ).map((item) => (
+            <button
+              type="button"
+              className="inline-flex rounded-lg bg-accent-soft p-2 text-accent sm:hidden"
+              aria-label={`${activeTheme.label} — แตะเพื่อเปลี่ยนเป็น${nextTheme.label}`}
+              onClick={() => setTheme(nextTheme.value)}
+            >
+              <activeTheme.icon className="size-4" />
+            </button>
+            {themes.map((item) => (
               <button
                 key={item.value}
-                className={`rounded-lg p-2 ${theme === item.value ? 'bg-accent-soft text-accent' : 'text-muted'}`}
+                className={`hidden rounded-lg p-2 sm:inline-flex ${theme === item.value ? 'bg-accent-soft text-accent' : 'text-muted'}`}
                 aria-label={item.label}
                 aria-pressed={theme === item.value}
                 onClick={() => setTheme(item.value)}
@@ -73,13 +83,15 @@ export function Layout() {
               </button>
             ))}
             {!session.user ? (
-              <Link to="/login" className="rounded-xl bg-primary px-3 py-2 text-sm text-white">
-                เข้าสู่ระบบ
+              <Link to="/login" className="inline-flex items-center justify-center rounded-xl bg-primary p-2 text-sm whitespace-nowrap text-white sm:px-3">
+                <UserRound className="size-4 sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">เข้าสู่ระบบ</span>
               </Link>
             ) : (
               <Button
                 size="sm"
                 variant="ghost"
+                className="px-2 sm:px-3"
                 loading={action.busy}
                 onClick={() =>
                   void action.run(async () => {
@@ -88,13 +100,14 @@ export function Layout() {
                   })
                 }
               >
-                ออกจากระบบ
+                <LogOut className="size-4 sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">ออกจากระบบ</span>
               </Button>
             )}
           </div>
         </div>
       </header>
-      <main ref={main} id="main" className="mx-auto min-h-[65vh] max-w-7xl px-4 pt-6 pb-24">
+      <main id="main" className="relative mx-auto min-h-[65vh] max-w-7xl px-4 pt-6 pb-24">
         {(error || action.error) && (
           <p role="alert" className="mb-4 text-danger">
             {error || action.error}
@@ -105,7 +118,17 @@ export function Layout() {
             ขณะนี้ยังไม่เปิดรับคำสั่งซื้อ
           </Notice>
         )}
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={pathname}
+            initial={reduced ? { opacity: 1 } : { opacity: 0, y: 16, filter: 'blur(7px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(4px)' }}
+            transition={{ duration: reduced ? 0.08 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
       <footer className="border-t border-line px-4 py-8 pb-28 text-sm text-muted lg:pb-8">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-4">
@@ -125,7 +148,7 @@ export function Layout() {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 py-3 text-xs ${isActive ? 'text-accent' : 'text-muted'}`
+              `mobile-nav-link flex flex-col items-center gap-1 py-3 text-xs ${isActive ? 'is-active text-accent' : 'text-muted'}`
             }
           >
             <item.icon className="size-5" />

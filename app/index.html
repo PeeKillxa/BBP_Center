@@ -15,8 +15,67 @@
         } catch (e) {}
       })()
     </script>
+    <style>
+      body.is-booting { overflow: hidden; }
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        color: #f5f9ff;
+        background:
+          radial-gradient(circle at 50% 42%, rgb(37 99 235 / .22), transparent 28%),
+          radial-gradient(circle at 75% 20%, rgb(34 211 238 / .11), transparent 26%),
+          #050816;
+        transition: opacity .55s cubic-bezier(.22, 1, .36, 1), visibility .55s, transform .7s cubic-bezier(.22, 1, .36, 1);
+      }
+      #app-loader::before {
+        content: '';
+        position: absolute;
+        inset: -50%;
+        opacity: .18;
+        background-image: linear-gradient(rgb(92 229 247 / .22) 1px, transparent 1px), linear-gradient(90deg, rgb(92 229 247 / .22) 1px, transparent 1px);
+        background-size: 54px 54px;
+        mask-image: radial-gradient(circle, #000 0%, transparent 58%);
+        transform: perspective(500px) rotateX(62deg) translateY(22%);
+        animation: boot-grid 8s linear infinite;
+      }
+      #app-loader.is-exiting { opacity: 0; visibility: hidden; transform: scale(1.035); }
+      .boot-panel { position: relative; width: min(420px, calc(100vw - 48px)); text-align: center; }
+      .boot-emblem { position: relative; display: grid; place-items: center; width: 176px; height: 176px; margin: 0 auto 26px; }
+      .boot-emblem::before, .boot-emblem::after { content: ''; position: absolute; border-radius: 999px; }
+      .boot-emblem::before { inset: 0; border: 1px solid rgb(92 229 247 / .3); border-top-color: #5ce5f7; animation: boot-spin 2.8s linear infinite; }
+      .boot-emblem::after { inset: 14px; border: 1px dashed rgb(96 165 250 / .35); animation: boot-spin 5s linear infinite reverse; }
+      .boot-logo { width: 126px; height: 126px; border-radius: 999px; object-fit: cover; filter: drop-shadow(0 0 30px rgb(34 211 238 / .28)); animation: boot-breathe 1.8s ease-in-out infinite; }
+      .boot-kicker { margin: 0 0 8px; color: #5ce5f7; font: 700 10px/1.4 system-ui, sans-serif; letter-spacing: .36em; }
+      .boot-title { margin: 0; font: 900 clamp(28px, 8vw, 44px)/1 system-ui, sans-serif; letter-spacing: -.04em; }
+      .boot-track { height: 2px; margin: 28px auto 14px; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / .1); }
+      .boot-track span { display: block; width: 45%; height: 100%; background: linear-gradient(90deg, transparent, #5ce5f7, #3b82f6, transparent); animation: boot-progress 1.15s cubic-bezier(.65, 0, .35, 1) infinite; }
+      .boot-status { margin: 0; color: #9aacc8; font: 500 12px/1.5 system-ui, sans-serif; letter-spacing: .04em; }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @keyframes boot-breathe { 50% { transform: scale(1.035); filter: drop-shadow(0 0 42px rgb(34 211 238 / .42)); } }
+      @keyframes boot-progress { from { transform: translateX(-110%); } to { transform: translateX(230%); } }
+      @keyframes boot-grid { to { transform: perspective(500px) rotateX(62deg) translateY(calc(22% + 54px)); } }
+      @media (prefers-reduced-motion: reduce) {
+        #app-loader, .boot-emblem::before, .boot-emblem::after, .boot-logo, .boot-track span, #app-loader::before { animation: none !important; transition-duration: .12s !important; }
+        .boot-track span { width: 100%; }
+      }
+    </style>
   </head>
-  <body>
+  <body class="is-booting">
+    <div id="app-loader" role="status" aria-live="polite" aria-label="กำลังเปิด BBP Center">
+      <div class="boot-panel">
+        <div class="boot-emblem" aria-hidden="true">
+          <img class="boot-logo" src="/brand/bbp-center-logo.png" alt="" width="126" height="126" />
+        </div>
+        <p class="boot-kicker">INITIALIZING EXPERIENCE</p>
+        <p class="boot-title">BBP CENTER</p>
+        <div class="boot-track" aria-hidden="true"><span></span></div>
+        <p class="boot-status">กำลังเตรียมโลกของคุณให้พร้อม</p>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

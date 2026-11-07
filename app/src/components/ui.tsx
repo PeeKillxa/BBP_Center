@@ -56,7 +56,7 @@ export function ButtonLink({ to, variant = 'primary', size = 'md', className, ch
 export function Card({ className, children, lift, as: As = 'div' }: { className?: string; children: ReactNode; lift?: boolean; as?: 'div' | 'section' | 'article' }) {
   const reduced = useReducedMotion()
   const Surface = As === 'article' ? motion.article : As === 'section' ? motion.section : motion.div
-  return <Surface initial={false} whileInView={reduced ? undefined : { opacity: [0.75, 1], y: [8, 0] }} viewport={{ once: true, amount: 0.08 }} transition={{ duration: .32 }} className={cn('store-card rounded-2xl border border-line bg-surface', lift && 'card-lift', className)}>{children}</Surface>
+  return <Surface initial={reduced ? false : { opacity: 0, y: 18 }} whileInView={reduced ? undefined : { opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.08 }} transition={{ duration: .42, ease: [0.22, 1, 0.36, 1] }} className={cn('store-card rounded-2xl border border-line bg-surface', lift && 'card-lift', className)}>{children}</Surface>
 }
 
 type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'accent'
