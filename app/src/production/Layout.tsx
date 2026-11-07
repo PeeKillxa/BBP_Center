@@ -1,7 +1,7 @@
 import { Moon, Sun, Monitor, House, Gem, Sprout, Wallet, UserRound, LogOut } from 'lucide-react'
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
+import { MotionConfig } from 'motion/react'
 import { StoreExperience } from '../components/StoreExperience'
-import { useEffect } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Logo } from '../components/Logo'
 import { Button, Notice } from '../components/ui'
@@ -10,13 +10,30 @@ import { api } from './api'
 import { useAction, useShop } from './context'
 
 export function Layout() {
+  const page = useRef<HTMLDivElement>(null)
   const { session, catalog, error, reload } = useShop()
   const { pathname } = useLocation(),
     theme = useTheme(),
-    action = useAction(),
-    reduced = useReducedMotion()
-  useEffect(() => {
-    window.scrollTo(0, 0)
+    action = useAction()
+  useLayoutEffect(() => {
+    // Commit the new route and reset scroll before paint. Keeping one outlet
+    // avoids rendering the next route inside an outgoing presence tree.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    if (preference.matches || !page.current?.animate) return
+    const animation = page.current.animate(
+      [
+        { opacity: 0.7, transform: 'translateY(6px)' },
+        { opacity: 1, transform: 'translateY(0)' },
+      ],
+      { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+    )
+    const stopOnReducedMotion = () => { if (preference.matches) animation.cancel() }
+    preference.addEventListener('change', stopOnReducedMotion)
+    return () => {
+      animation.cancel()
+      preference.removeEventListener('change', stopOnReducedMotion)
+    }
   }, [pathname])
   const nav = [
     { to: '/', text: 'หน้าแรก', icon: House },
@@ -118,17 +135,9 @@ export function Layout() {
             ขณะนี้ยังไม่เปิดรับคำสั่งซื้อ
           </Notice>
         )}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={pathname}
-            initial={reduced ? { opacity: 1 } : { opacity: 0, y: 16, filter: 'blur(7px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: reduced ? 0.08 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <div ref={page} data-page-transition>
+          <Outlet />
+        </div>
       </main>
       <footer className="border-t border-line px-4 py-8 pb-28 text-sm text-muted lg:pb-8">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-4">
