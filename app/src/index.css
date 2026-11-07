@@ -136,8 +136,7 @@ body { background-image:radial-gradient(ellipse at 80% 0%,rgb(37 99 235 / .09),t
 .premium-hero { background:linear-gradient(125deg,var(--surface),var(--bg)); }
 .eyebrow { color:var(--accent); font-size:.7rem; font-weight:700; letter-spacing:.22em; }
 .hero-light { position:absolute; inset:0; pointer-events:none; opacity:.6; background:radial-gradient(ellipse at 80% 45%,rgb(34 211 238 / .16),transparent 50%); animation:ambient 16s ease-in-out infinite alternate; }
-.brand-orbit { position:absolute; inset:8%; border:1px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:orbit 35s linear infinite; box-shadow:0 0 70px rgb(37 99 235 / .15); }
-.brand-intro { animation:brand-enter .8s cubic-bezier(.2,.8,.2,1) both; filter:drop-shadow(0 14px 30px rgb(0 0 0 / .3)); }
+.brand-intro { animation:brand-enter .8s cubic-bezier(.2,.8,.2,1) both; filter:drop-shadow(0 18px 26px rgb(0 0 0 / .22)); }
 .store-card { box-shadow:0 8px 28px rgb(0 0 0 / .06); }
 .store-button { position:relative; transition:background-color .18s, border-color .18s,box-shadow .18s,transform .18s; }
 .store-button:active { transform:scale(.97); }
@@ -152,10 +151,9 @@ header nav a[aria-current=page] { background:var(--accent-soft); }
   .store-button:hover { box-shadow:0 5px 24px rgb(37 99 235 / .2); }
 }
 @keyframes ambient { to { transform:translate3d(-4%,3%,0); } }
-@keyframes orbit { to { transform:rotate(360deg); } }
 @keyframes brand-enter { from { opacity:0; transform:scale(.9) translateY(14px); } to { opacity:1; transform:none; } }
-@media (max-width:639px) { .hero-brand { max-width:220px; } .hero-light,.brand-orbit { animation:none; } header .store-button { padding-inline:10px; } }
-@media (prefers-reduced-motion:reduce) { .hero-light,.brand-orbit,.brand-intro,.skeleton { animation:none!important; } .card-lift:hover,.store-button:active { transform:none!important; } }
+@media (max-width:639px) { .hero-brand { max-width:240px; } .hero-light,.brand-float { animation:none; } header .store-button { padding-inline:10px; } }
+@media (prefers-reduced-motion:reduce) { .hero-light,.brand-float,.brand-intro,.skeleton { animation:none!important; } .card-lift:hover,.store-button:active { transform:none!important; } }
 
 .store-dialog { margin:auto; width:min(440px,calc(100vw - 32px)); max-height:85vh; overflow:auto; padding:24px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:24px; box-shadow:0 30px 100px #0008; }
 .store-dialog::backdrop { background:rgb(0 5 15 / .75); backdrop-filter:blur(4px); }
@@ -207,12 +205,11 @@ header nav a[aria-current=page] { background:var(--accent-soft); }
 .hero-gradient-text { color: transparent; background: linear-gradient(100deg, var(--accent), #60a5fa 45%, #c4b5fd 88%); background-size: 160% auto; background-clip: text; -webkit-background-clip: text; animation: text-shine 6s ease-in-out infinite alternate; }
 .hero-trust span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgb(92 229 247 / .12); border-radius: 999px; background: rgb(10 18 36 / .32); backdrop-filter: blur(8px); }
 .hero-trust svg { width: 14px; height: 14px; color: var(--accent); }
-.brand-halo { position: absolute; inset: 13%; border-radius: 999px; background: radial-gradient(circle, rgb(37 99 235 / .32), transparent 68%); filter: blur(14px); animation: halo-pulse 3.2s ease-in-out infinite; }
-.brand-orbit-inner { inset: 18%; border-style: dashed; border-color: rgb(92 229 247 / .25); animation-duration: 22s; animation-direction: reverse; }
-.hero-float-card { position: absolute; z-index: 12; padding: 8px 13px; border: 1px solid rgb(92 229 247 / .22); border-radius: 999px; color: var(--accent); background: rgb(7 11 24 / .72); box-shadow: 0 14px 40px rgb(0 0 0 / .25); backdrop-filter: blur(12px); font-size: 10px; font-weight: 700; letter-spacing: .14em; white-space: nowrap; animation: float-card 4.5s ease-in-out infinite; }
-.hero-float-card i { display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 999px; background: #4ade80; box-shadow: 0 0 10px #4ade80; animation: live-pulse 1.5s ease-in-out infinite; }
-.hero-float-top { top: 8%; right: -2%; }
-.hero-float-bottom { bottom: 3%; left: 2%; animation-delay: -2.2s; }
+.brand-halo { position: absolute; inset: 4%; border-radius: 50%; background: radial-gradient(ellipse, rgb(34 211 238 / .14), rgb(37 99 235 / .12) 40%, transparent 72%); filter: blur(20px); }
+.brand-float { position: relative; z-index: 1; width: 86%; }
+@media (min-width:640px) and (prefers-reduced-motion:no-preference) {
+  .brand-float { animation: brand-float 7s ease-in-out infinite; }
+}
 
 /* Product and process motion ------------------------------------------- */
 .listing-media { position: relative; overflow: hidden; isolation: isolate; }
@@ -232,21 +229,17 @@ header nav a[aria-current=page] { background:var(--accent-soft); }
 @keyframes hero-copy-in { from { opacity: 0; transform: translateY(18px); filter: blur(7px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes hero-scan { from { transform: translateY(-30vh); } to { transform: translateY(120vh); } }
 @keyframes text-shine { to { background-position: 100% center; } }
-@keyframes halo-pulse { 50% { transform: scale(1.08); opacity: .75; } }
-@keyframes float-card { 50% { transform: translateY(-8px); } }
-@keyframes live-pulse { 50% { opacity: .35; transform: scale(.75); } }
+@keyframes brand-float { 50% { transform: translateY(-6px); } }
 @keyframes orb-float { to { transform: translate3d(6vw, 4vh, 0) scale(1.08); } }
 
 @media (max-width: 639px) {
   .cinematic-hero { border-radius: 24px; }
-  .hero-float-top { right: 0; }
-  .hero-float-bottom { left: 0; }
   .hero-trust { gap: 7px; }
   .hero-trust span { padding: 6px 8px; font-size: 10px; }
   .site-atmosphere::before { background-size: 48px 48px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .site-orb, .hero-scanline, .hero-copy > *, .hero-gradient-text, .brand-halo, .hero-float-card, .hero-float-card i { animation: none !important; }
+  .site-orb, .hero-scanline, .hero-copy > *, .hero-gradient-text, .brand-float { animation: none !important; }
   .listing-media img, .listing-shine, .nav-link::after, .mobile-nav-link { transition: none !important; }
 }

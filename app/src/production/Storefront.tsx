@@ -51,11 +51,9 @@ export function Home() {
           </div>
           <div className="hero-brand relative mx-auto flex aspect-square w-full max-w-[380px] items-center justify-center">
             <div className="brand-halo" aria-hidden="true" />
-            <div className="brand-orbit" aria-hidden="true" />
-            <div className="brand-orbit brand-orbit-inner" aria-hidden="true" />
-            <img src="/brand/bbp-center-logo.png" alt="BBP Center" className="brand-intro relative z-10 w-4/5 object-contain" width="320" height="320" />
-            <span className="hero-float-card hero-float-top"><i /> LIVE STORE</span>
-            <span className="hero-float-card hero-float-bottom">YOUR NEXT ADVENTURE</span>
+            <div className="brand-float">
+              <img src="/brand/bbp-center-logo.png" alt="BBP Center" className="brand-intro block w-full object-contain" width="320" height="320" />
+            </div>
           </div>
         </div>
       </section>
